@@ -5,7 +5,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getRewards, listCoupons } from "../utils/rewards";
 import { getSession } from "../utils/localStorage";
 
-
 import "../css/Payment.css";
 
 export default function Payment() {
@@ -89,7 +88,6 @@ export default function Payment() {
       Math.floor(subtotal * ((chosen?.rate ?? (chosen?.percent ? chosen.percent / 100 : 0)) || 0));
     const couponAmt = toInt(
       (chosen ? (Number(chosen.amount) || calcFromPercent) : 0), 0
-
     );
 
     const total = Math.max(0, subtotal + shipFee - couponAmt);
@@ -127,7 +125,7 @@ export default function Payment() {
       firstName,
       extraCount,
     };
-  }, [rawLineItems, location.state?.coupon]);
+  }, [rawLineItems, couponOptions, selectedCouponId]);
 
   /* --------- 적립금 사용 --------- */
   const availablePoints = useMemo(
@@ -139,6 +137,11 @@ export default function Payment() {
     () => Math.max(0, Math.min(availablePoints, total)),
     [availablePoints, total]
   );
+  // 쿠폰/합계가 바뀌면 현재 입력된 포인트를 상한에 맞게 자동 보정
+  useEffect(() => {
+    setPointsToUse(p => Math.min(p, Math.max(0, maxUseable)));
+  }, [maxUseable]);
+
   const onChangePoints = (v) => {
     const n = Number(String(v ?? "").replace(/[^\d.-]/g, "")) || 0;
     setPointsToUse(Math.min(Math.max(0, n), maxUseable));
@@ -147,7 +150,6 @@ export default function Payment() {
     () => Math.max(0, total - (pointsToUse || 0)),
     [total, pointsToUse]
   );
-
 
   /* ---------------------- 폼 상태 ---------------------- */
   const [buyer, setBuyer] = useState("");
@@ -190,10 +192,16 @@ export default function Payment() {
       lineItems: items,
       subtotal,
       shipFee,
-      coupon: couponAmt,
+      coupon: selectedCouponId
+        ? {
+          id: selectedCouponId,
+          amount: couponAmt,
+          title:
+            couponOptions.find(c => c.id === selectedCouponId)?.title || "쿠폰",
+        }
+        : 0,
       total: payTotal,
       pointsUsed: Math.min(pointsToUse || 0, maxUseable),
-
     };
 
     navigate("/payment2", { state: payload });
@@ -489,6 +497,29 @@ export default function Payment() {
                   <p>{fmt(shipFee)}</p>
                 </div>
               </li>
+              {/* 쿠폰 선택 */}
+              <li>
+                <div id="payment2-coupon">
+                  <p className="payment2-coupon-title">쿠폰</p>
+                  <div className="payment2-coupon-sel">
+                    <select
+                      value={selectedCouponId || ""}
+                      onChange={(e) => setSelectedCouponId(e.target.value || null)}
+                    >
+                      <option value="">선택 안함</option>
+                      {couponOptions.map(c => (
+                        <option key={c.id} value={c.id}>
+                          {(c.title || "쿠폰")} · {c.percent ?? Math.round((c.rate || 0) * 100) ?? 0}% · -
+                          {new Intl.NumberFormat("ko-KR").format(Number(c.amount || 0))}원
+                        </option>
+                      ))}
+                    </select>
+                    {selectedCouponId && (
+                      <button className="pay2-button" type="button" onClick={() => setSelectedCouponId(null)}>적용 취소</button>
+                    )}
+                  </div>
+                </div>
+              </li>
 
               <li>
                 <div id="payment4">
@@ -498,22 +529,20 @@ export default function Payment() {
               </li>
               {/* ✅ 적립금 사용 */}
               <li>
-                <div id="payment4-pts" style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
+                <div id="payment4-pts" >
                   <p>적립금 사용</p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div className="payment4-input" >
                     <input
                       type="text"
                       inputMode="numeric"
                       value={pointsToUse}
                       onChange={(e) => onChangePoints(e.target.value)}
-                      style={{ width: 100, textAlign: "right" }}
                     />
-                    <button type="button" onClick={() => setPointsToUse(maxUseable)}>전액사용</button>
+                    <button className="pay4-button" type="button" onClick={() => setPointsToUse(maxUseable)}>전액사용</button>
                     <span style={{ color: "#666", fontSize: 12 }}>보유 {fmt(availablePoints)}</span>
                   </div>
                 </div>
               </li>
-
 
               <div className="title-underline"></div>
 
@@ -521,7 +550,6 @@ export default function Payment() {
                 <div id="payment5">
                   <p>총 결제 금액</p>
                   <p>{fmt(payTotal)}</p>
-
                 </div>
               </li>
             </ul>
@@ -547,6 +575,6 @@ export default function Payment() {
           </div>
         </div>
       </div>
-    </form>
+    </form >
   );
 }

@@ -1,12 +1,11 @@
 // src/pages/Payment2.jsx
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { setPurchaseFlag, markRecentPurchase, addPoints } from "../utils/rewards";
-import { spendPoints } from "../utils/rewards";
+import { spendPoints, setPurchaseFlag, markRecentPurchase, addPoints, markCouponUsed, listCoupons } from "../utils/rewards";
+
 import { getSession } from "../utils/localStorage";
 import { saveOrder, createOrderId } from "../utils/orders"; // 존재하지 않으면 try/catch 폴백
 import { tagPurchased, removeMany } from "../utils/cart";
-
 
 
 import "../css/Payment2.css";
@@ -76,7 +75,6 @@ function normalizeForPayment2(x, i = 0) {
   x = x && typeof x === "object" ? x : {};
   return {
     image: x.image ?? x.thumb ?? x.src ?? "/img/placeholder.png",
-
     brand: x.brand ?? x.seller ?? "",
     title: x.title ?? x.name ?? "-",
     color: x.color ?? x.optionColor ?? x.colorLabel ?? "-",
@@ -92,7 +90,6 @@ function normalizeForPayment2(x, i = 0) {
     id: x.id ?? `${(x.title ?? x.name ?? "item")}-${i}`,
     slug: x.slug ?? undefined,
     thumb: x.thumb ?? x.image ?? x.src ?? "/img/placeholder.png",
-
     // ★ 장바구니 원본 key 추적(결제 후 tagPurchased용)
     originalKey: x.sourceKey ?? x.key ?? x.originalKey ?? null,
   };
@@ -114,7 +111,6 @@ export default function Payment2() {
   const session = getSession();
   const uid = session?.username || session?.userid || null;
 
-
   /* ✅ 주문 ID / 구매시각: 컴포넌트 안에서 한 번만 고정 생성 */
   const orderIdRef = React.useRef(payload.orderId || (typeof createOrderId === "function" ? createOrderId() : `ORD-${Date.now()}`));
   const purchasedAtRef = React.useRef(Date.now());
@@ -133,10 +129,43 @@ export default function Payment2() {
     { product: 0, delivery: 0 }
   );
   const grandTotal = totals.product + totals.delivery;
-  const couponAmt = toNumber(payload?.coupon ?? 0, 0);
+  const couponData = payload?.coupon;
+
+  // ✅ 쿠폰 금액 산정(모든 케이스 처리)
+  let couponAmt = 0;
+  if (typeof couponData === "object" && couponData) {
+    // 1) amount가 오면 그대로
+    couponAmt = toNumber(couponData.amount, 0);
+
+    // 2) amount가 없으면 percent/rate로 계산 (상품합계 기준)
+    if (!couponAmt) {
+      const rate =
+        (typeof couponData.rate === "number" ? couponData.rate : null) ??
+        (typeof couponData.percent === "number" ? couponData.percent / 100 : null);
+      if (rate) couponAmt = Math.floor(totals.product * rate);
+    }
+
+    // 3) 그래도 0이면 원장에서 찾아서 보정
+    if (!couponAmt && uid && couponData.id) {
+      const found = listCoupons(uid, { includeUsed: true, excludeExpired: false })
+        .find(c => c.id === couponData.id);
+      if (found) {
+        if (found.amount) {
+          couponAmt = toNumber(found.amount, 0);
+        } else {
+          const rate2 =
+            (typeof found.rate === "number" ? found.rate : null) ??
+            (typeof found.percent === "number" ? found.percent / 100 : null) ?? 0;
+          couponAmt = Math.floor(totals.product * rate2);
+        }
+      }
+    }
+  } else {
+    // 숫자로 넘어오는 경우
+    couponAmt = toNumber(couponData ?? 0, 0);
+  }
   const pointsUsed = toNumber(payload?.pointsUsed ?? 0, 0);
   const paidTotal = Math.max(0, grandTotal - couponAmt - pointsUsed);
-
 
   /* 주소/연락처 표시 */
   const receiver = payload.receiver || "";
@@ -151,14 +180,12 @@ export default function Payment2() {
 
 
 
-
   /* ✅ 포인트 적립 (6%, 중복 방지) */
   React.useEffect(() => {
     if (!items.length) return;
     const creditKey = `pointsCredited:${orderId}`;
     if (sessionStorage.getItem(creditKey) === "1") return;
     const earn = Math.floor(paidTotal * 0.02);
-
     if (uid && earn > 0) {
       addPoints(uid, earn);
       sessionStorage.setItem(creditKey, "1");
@@ -176,6 +203,17 @@ export default function Payment2() {
     sessionStorage.setItem(flag, "1");
   }, [uid, items, pointsUsed, orderId]);
 
+  React.useEffect(() => {
+    if (!items.length) return;
+    const flag = `couponConsumed:${orderId}`;
+    if (sessionStorage.getItem(flag) === "1") return;
+
+    const c = (typeof couponData === "object") ? couponData : null;
+    if (uid && c?.id) {
+      markCouponUsed(uid, c.id); // 원장에 used=true, 보유 개수 감소
+    }
+    sessionStorage.setItem(flag, "1");
+  }, [uid, items, orderId, couponData]);
 
   /* ✅ 구매 플래그(이벤트 토큰) */
   React.useEffect(() => {
@@ -198,7 +236,6 @@ export default function Payment2() {
       // 각 항목에 { lastOrderId, purchasedAt } 기록 → MyPage 최근주문 인식
       tagPurchased(keys, orderId, purchasedAt);
       removeMany(keys); // 결제 후 카트를 비우고 싶으면 주석 해제
-
     }
     sessionStorage.setItem(flag, "1");
   }, [items, orderId, purchasedAt]);
@@ -236,7 +273,6 @@ export default function Payment2() {
             points: pointsUsed,
             grandTotal: paidTotal,   // ✅ 최종 결제액
           },
-
           status: "결제완료",
         });
       }
@@ -263,7 +299,6 @@ export default function Payment2() {
         coupon: couponAmt,
         pointsUsed,
         total: paidTotal,           // ✅ 최종 결제액
-
         receiver,
         address: { zip, addr1: address1, addr2: address2 },
         phone,
@@ -407,6 +442,8 @@ export default function Payment2() {
           </div>
         ))}
 
+
+
         {items.length === 0 && (
           <div style={{ padding: "32px 0", textAlign: "center", color: "#666" }}>
             장바구니가 비어있어요.{" "}
@@ -422,7 +459,6 @@ export default function Payment2() {
       <div id="order-total">
         <div className="order-total-title">최종 결제 금액</div>
         <div className="order-total-price"> {fmtKRW(paidTotal)}</div>
-
       </div>
 
       {/* 배송정보 요약 */}

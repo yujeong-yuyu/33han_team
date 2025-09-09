@@ -16,7 +16,6 @@ import CouponModal from "../components/CouponModal";
 
 
 
-
 const KEY_BASE = "souvenirEventResult";
 const keyFor = (uid) => (uid ? `${KEY_BASE}:${uid}` : KEY_BASE);
 const CDN = "https://00anuyh.github.io/SouvenirImg";
@@ -39,7 +38,6 @@ const resolveImg = (src) => {
   if (/^https?:\/\//i.test(p)) return p;     // 절대 URL은 그대로
   if (p.startsWith("/img/")) return p;       // 앱 내 정적자원은 그대로
   return `${CDN}${p}`;                       // 나머지만 CDN
-
 };
 
 
@@ -115,7 +113,6 @@ const MyPage = () => {
   const [open, setOpen] = useState(false);
   const [openCoupon, setOpenCoupon] = useState(false);
   const [orders, setOrders] = useState([]);
-
 
 
   const { isLoggedIn, user, logoutAll } = useAuth();
@@ -331,7 +328,6 @@ const MyPage = () => {
                   }
                 }}
               >
-
                 <div className="mybox-title"><img src="https://00anuyh.github.io/SouvenirImg/ticket_icon.svg" alt="ticket_icon" /><span>쿠폰</span></div>
                 <div className="mybox-num">{rewards.coupons || 0}</div>
               </div>
@@ -388,40 +384,51 @@ const MyPage = () => {
                   );
                 })}
               </div>
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 16 }}>
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                style={{ background: "transparent", border: "none", cursor: page > 1 ? "pointer" : "default", color: page > 1 ? "#333" : "#bbb", fontSize: 18 }}
-                aria-label="이전 페이지"
-                title="이전"
-              >
-                &lt;
-              </button>
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 16,
+                marginTop: 16,
+                position: "absolute",
+                left: "50%",
+                transform: "translateX(-50%)",
+                bottom: 100
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  style={{ background: "transparent", border: "none", cursor: page > 1 ? "pointer" : "default", color: page > 1 ? "#333" : "#bbb", fontSize: 18 }}
+                  aria-label="이전 페이지"
+                  title="이전"
+                >
+                  &lt;
+                </button>
 
-              <span style={{ minWidth: 80, textAlign: "center", fontSize: 14 }}>
-                {page} / {totalPages}
-              </span>
+                <span style={{ minWidth: 80, textAlign: "center", fontSize: 14 }}>
+                  {page} / {totalPages}
+                </span>
 
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                style={{ background: "transparent", border: "none", cursor: page < totalPages ? "pointer" : "default", color: page < totalPages ? "#333" : "#bbb", fontSize: 18 }}
-                aria-label="다음 페이지"
-                title="다음"
-              >
-                &gt;
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  style={{ background: "transparent", border: "none", cursor: page < totalPages ? "pointer" : "default", color: page < totalPages ? "#333" : "#bbb", fontSize: 18 }}
+                  aria-label="다음 페이지"
+                  title="다음"
+                >
+                  &gt;
+                </button>
+              </div>
+
             </div>
+
           </section>
         </main>
 
         <GiftModal open={open} onClose={() => setOpen(false)} data={modalData || {}} />
         <CouponModal open={openCoupon} onClose={() => setOpenCoupon(false)} />
-
       </div>
     </>
   );

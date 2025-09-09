@@ -4,6 +4,8 @@
     height: 130vh;
 }
 
+
+
 /* 안내 메뉴  */
 #mypage-progress {
     height: 130px;
@@ -113,11 +115,18 @@
     font-weight: 500;
 }
 
+.logout {
+    margin-top: 350px;
+
+
+}
+
 /* ===== 콘텐츠 ===== */
 .a_my-content {
     grid-column: 2 / -1;
     min-width: 0;
     /* 긴 텍스트 줄바꿈 안전 */
+    height: 100%;
 }
 
 /*--------- 프로필------------- */
@@ -213,7 +222,8 @@
 .a_orders {
     color: #5e472f;
     margin: 50px 0;
-
+    position: relative;
+    height: 800px;
 }
 
 .a_order-con {
@@ -591,7 +601,6 @@ button {
     filter: grayscale(.2);
     opacity: .75
 }
-
 
 
 
