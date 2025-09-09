@@ -72,15 +72,39 @@ h3 {
   margin: 0 auto;
 }
 
-.floating-ask {
-  position: fixed;
-  bottom: var(--fab-base-bottom, 15px);
-  right: 30px;
+
+/* 전역 변수: 기본 여백 + 푸터 겹침 보정 */
+:root {
+  --fab-base-bottom: 15px;
+  --fab-push-up: 0px;
+  /* JS가 필요시 값 업데이트 */
 }
 
-.chatbot-container {
-  z-index: 999;
+/* 플로팅 아이콘 */
+.floating-ask {
   position: fixed;
-  top: 210px;
-  right: 50px;
+  right: 30px;
+  bottom: calc(var(--fab-base-bottom) + var(--fab-push-up));
+  z-index: 5000;
+  transition: bottom .2s ease, transform .2s ease, opacity .2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* 모달 컨테이너(챗봇) */
+.chatbot-container {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 5500;
+  transition: bottom .2s ease, transform .2s ease, opacity .2s ease;
+}
+
+/* 모달이 열릴 때 아이콘만 숨기고(사라지는 문제와 무관), 
+   푸터 보정과는 관련없도록 별개 상태로 둡니다. */
+.floating-ask.hidden {
+  opacity: 0;
+  pointer-events: none;
 }

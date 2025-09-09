@@ -266,7 +266,10 @@
     margin-left: auto;
 }
 
-/* Review */
+
+/* =========================
+   Review
+   ========================= */
 .detail-warp1 #review {
     width: 500px;
     margin-bottom: 50px;
@@ -304,6 +307,7 @@
 .detail-warp1 .rv-nick {
     font-size: 16px;
 }
+
 
 .detail-warp1 .rv-stars {
     display: flex;
@@ -470,7 +474,9 @@
     z-index: 2000;
 }
 
-.detail-warp1 #rv-modal .rvm-close {
+
+.detail-warp1 #rv-modal .rvm-close,
+.detail-warp1 #rv-edit-modal .rvm-close {
     position: absolute;
     top: 10px;
     right: 12px;
@@ -522,6 +528,131 @@
     color: #5E472F;
 }
 
+
+.rv-actions .rv-edit-btn,
+.rv-actions .rv-del-btn {
+    font-size: 12px;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fafafa;
+}
+
+/* =========================
+   PATCH: 리뷰 수정 모달 좌/우 배치
+   ========================= */
+
+/* ===== 리뷰 수정 모달: 정확한 행/열 고정 ===== */
+.detail-warp1 #rv-edit-modal {
+    position: fixed;
+    top: 20%;
+    right: 20%;
+    width: 570px;
+    max-height: 70vh;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+        "nick      topclose"
+        "stars     text"
+        "photo     text"
+        "btn      bottomclose";
+    gap: 10px 15px;
+    align-items: start;
+    padding: 18px;
+    overflow: auto;
+    background: #fff7E4;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .15);
+    display: none;
+    z-index: 2000;
+}
+
+
+/* 각 영역 매핑 */
+.detail-warp1 #rv-edit-modal .rve-nick {
+    grid-area: nick;
+    font-weight: 800;
+}
+
+.detail-warp1 #rv-edit-modal .rve-topclose {
+    grid-area: topclose;
+    justify-self: end;
+}
+
+.detail-warp1 #rv-edit-modal .rv-stars {
+    grid-area: stars;
+}
+
+.detail-warp1 #rv-edit-modal .rv-preview {
+    width: 250px;
+    height: 250px;
+    grid-area: photo;
+}
+
+.detail-warp1 #rv-edit-modal .rv-preview img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.detail-warp1 #rv-edit-modal .rv-photo-btn {
+    grid-area: btn;
+    margin-right: auto;
+}
+
+.detail-warp1 #rv-edit-modal textarea.rv-text {
+    grid-area: text;
+    width: 100%;
+    min-height: 275px;
+}
+
+.detail-warp1 #rv-edit-modal .rv-edit-save {
+    grid-area: save;
+}
+
+.detail-warp1 #rv-edit-modal .rv-edit-bottomclose {
+    grid-area: bottomclose;
+    justify-self: end;
+}
+
+/* 별/버튼 기본 스타일(기존과 동일하거나 필요시 보완) */
+.detail-warp1 #rv-edit-modal .rv-stars .star {
+    font-size: 20px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    padding: 0 2px;
+    color: #b8a88c;
+}
+
+.detail-warp1 #rv-edit-modal .rv-stars .star.on {
+    color: #5E472F;
+}
+
+.detail-warp1 #rv-edit-modal .rv-photo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #5E472F;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.detail-warp1 #rv-edit-modal .rv-edit-save {
+    grid-area: bottomclose;
+    justify-self: end;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 0;
+    background: #5E472F;
+    color: #fff;
+    font-weight: 700;
+}
+
+
 /* =========================
    Right fixed detail
    ========================= */
@@ -571,7 +702,7 @@
 /* =========================
    Buybar (scoped)
    ========================= */
-/* JS에서 --buybar-h(px)를 갱신. 여기서는 그 값을 사용 */
+
 .detail-warp1 #detailPage,
 .detail-warp1 .detail-left {
     padding-bottom: calc(var(--buybar-h, 64px) + 24px);
@@ -617,8 +748,10 @@
     transition: transform .2s ease;
 }
 
+
+/* ✅ translateY → rotate 로 수정 */
 .detail-warp1 .detail-buybar-actions[aria-expanded="true"] .caret {
-    transform: translateY(180deg);
+    transform: rotate(180deg);
 }
 
 .detail-warp1 .detail-buybar-right {
@@ -628,14 +761,6 @@
     align-items: flex-end;
 }
 
-/* 
-.detail-warp1 .detail-label-box {
-    margin-bottom: 10px;
-}
-
-.detail-warp1 .detail-label {
-    margin-right: 10px;
-} */
 
 .detail-warp1 .detail-option {
     margin-top: 35px;
@@ -691,7 +816,7 @@
     font-size: 1.2rem;
 }
 
-/* Inputs inside sheet */
+
 .detail-warp1 select {
     padding: 7px;
 }
@@ -720,5 +845,5 @@
 .detail-warp1 .detail-cartBtn:hover,
 .detail-warp1 .detail-buyBtn:hover {
     background-color: #9b8d76;
-    /* color: #5E472F; */
+
 }

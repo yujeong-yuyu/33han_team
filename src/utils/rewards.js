@@ -50,6 +50,7 @@ export const addCoupons = (uid, n = 1) =>
     coupons: Math.max(0, (Number(r.coupons) || 0) + Number(n)),
   }));
 
+
 export const addPoints = (uid, n = 0) =>
   updateRewards(uid, (r) => ({ ...r, points: r.points + Number(n) }));
 
@@ -286,3 +287,4 @@ export function grantEventCoupon(
   addCoupons(uid, 1);
   return coupon;
 }
+

@@ -16,6 +16,7 @@ import CouponModal from "../components/CouponModal";
 
 
 
+
 const KEY_BASE = "souvenirEventResult";
 const keyFor = (uid) => (uid ? `${KEY_BASE}:${uid}` : KEY_BASE);
 const CDN = "https://00anuyh.github.io/SouvenirImg";
@@ -38,6 +39,7 @@ const resolveImg = (src) => {
   if (/^https?:\/\//i.test(p)) return p;     // 절대 URL은 그대로
   if (p.startsWith("/img/")) return p;       // 앱 내 정적자원은 그대로
   return `${CDN}${p}`;                       // 나머지만 CDN
+
 };
 
 
@@ -113,6 +115,7 @@ const MyPage = () => {
   const [open, setOpen] = useState(false);
   const [openCoupon, setOpenCoupon] = useState(false);
   const [orders, setOrders] = useState([]);
+
 
 
   const { isLoggedIn, user, logoutAll } = useAuth();
@@ -328,6 +331,7 @@ const MyPage = () => {
                   }
                 }}
               >
+
                 <div className="mybox-title"><img src="https://00anuyh.github.io/SouvenirImg/ticket_icon.svg" alt="ticket_icon" /><span>쿠폰</span></div>
                 <div className="mybox-num">{rewards.coupons || 0}</div>
               </div>
@@ -417,6 +421,7 @@ const MyPage = () => {
 
         <GiftModal open={open} onClose={() => setOpen(false)} data={modalData || {}} />
         <CouponModal open={openCoupon} onClose={() => setOpenCoupon(false)} />
+
       </div>
     </>
   );

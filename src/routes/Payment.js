@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getRewards, listCoupons } from "../utils/rewards";
 import { getSession } from "../utils/localStorage";
 
+
 import "../css/Payment.css";
 
 export default function Payment() {
@@ -88,6 +89,7 @@ export default function Payment() {
       Math.floor(subtotal * ((chosen?.rate ?? (chosen?.percent ? chosen.percent / 100 : 0)) || 0));
     const couponAmt = toInt(
       (chosen ? (Number(chosen.amount) || calcFromPercent) : 0), 0
+
     );
 
     const total = Math.max(0, subtotal + shipFee - couponAmt);
@@ -146,6 +148,7 @@ export default function Payment() {
     [total, pointsToUse]
   );
 
+
   /* ---------------------- 폼 상태 ---------------------- */
   const [buyer, setBuyer] = useState("");
   const [receiver, setReceiver] = useState("");
@@ -190,6 +193,7 @@ export default function Payment() {
       coupon: couponAmt,
       total: payTotal,
       pointsUsed: Math.min(pointsToUse || 0, maxUseable),
+
     };
 
     navigate("/payment2", { state: payload });
@@ -510,12 +514,14 @@ export default function Payment() {
                 </div>
               </li>
 
+
               <div className="title-underline"></div>
 
               <li>
                 <div id="payment5">
                   <p>총 결제 금액</p>
                   <p>{fmt(payTotal)}</p>
+
                 </div>
               </li>
             </ul>

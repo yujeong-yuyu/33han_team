@@ -77,6 +77,7 @@ export default function Event() {
   }, []);
 
   /* 불꽃놀이(연출) */
+
   function triggerFirework() {
     const root = document.createElement("div");
     root.className = "firework-root";
@@ -85,12 +86,14 @@ export default function Event() {
     const N = 30;
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
+
     for (let i = 0; i < N; i++) {
       const p = document.createElement("span");
       p.className = "fire-particle";
       p.style.background = COLORS[i % COLORS.length];
       p.style.left = cx + "px";
       p.style.top = cy + "px";
+
       p.style.setProperty("--tx", (Math.random() - 0.5) * 400 + "px");
       p.style.setProperty("--ty", (Math.random() - 0.5) * 400 + "px");
       root.appendChild(p);
@@ -149,6 +152,7 @@ export default function Event() {
     const isWin = Math.random() < WIN_RATE;
 
     // 상태 반영
+
     setCards((prev) => {
       const next = prev.slice();
       next[idx] = { opened: true, isWin };
@@ -163,6 +167,7 @@ export default function Event() {
 
     // 결과 저장(마이페이지용)
     persistResult(uid, {
+
       won: isWin,
       prizeName: isWin ? "present_for_you" : null,
       openedAt: new Date().toISOString(),
@@ -306,3 +311,4 @@ export default function Event() {
     </div>
   );
 }
+
