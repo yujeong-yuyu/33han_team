@@ -60,7 +60,7 @@
     line-height: 1.18;
     letter-spacing: -0.2px;
     font-size: clamp(18px, 3.2vw, 28px);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, .5);
+    color: #fff;
 }
 
 /* 좌하단 액션 */

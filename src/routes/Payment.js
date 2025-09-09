@@ -1,11 +1,31 @@
 // src/pages/Payment.jsx
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+
+import { getRewards, listCoupons } from "../utils/rewards";
+import { getSession } from "../utils/localStorage";
+
+
 import "../css/Payment.css";
 
 export default function Payment() {
   const navigate = useNavigate();
   const location = useLocation();
+  const session = getSession?.();
+  const uid = session?.username || session?.userid || null;
+  const [couponOptions, setCouponOptions] = useState([]);
+  const [selectedCouponId, setSelectedCouponId] = useState(null);
+
+  // 유효(미사용+미만료) 쿠폰 불러오기
+  useEffect(() => {
+    if (!uid) { setCouponOptions([]); return; }
+    const rows = listCoupons(uid, { includeUsed: false, excludeExpired: true });
+    // 최신 발급순 정렬
+    rows.sort((a, b) => new Date(b.issuedAt) - new Date(a.issuedAt));
+    setCouponOptions(rows);
+  }, [uid]);
+
+
 
   // ---- 원본 아이템 안전 수령: lineItems | items | 단일 객체도 배열화 ----
   const incoming =
@@ -63,10 +83,13 @@ export default function Payment() {
     const subtotal = items.reduce((s, it) => s + it.unitPrice * it.qty, 0);
     const shipFee = items.reduce((s, it) => s + it.delivery, 0);
 
-    // 쿠폰: 숫자 또는 { amount } 모두 대응
-    const rawCoupon = location.state?.coupon ?? 0;
+    // 선택한 쿠폰 금액 산정 (amount 우선, 없으면 percent/rate로 계산)
+    const chosen = couponOptions.find(c => c.id === selectedCouponId) || null;
+    const calcFromPercent =
+      Math.floor(subtotal * ((chosen?.rate ?? (chosen?.percent ? chosen.percent / 100 : 0)) || 0));
     const couponAmt = toInt(
-      (typeof rawCoupon === "object" ? rawCoupon?.amount : rawCoupon) ?? 0
+      (chosen ? (Number(chosen.amount) || calcFromPercent) : 0), 0
+
     );
 
     const total = Math.max(0, subtotal + shipFee - couponAmt);
@@ -105,6 +128,26 @@ export default function Payment() {
       extraCount,
     };
   }, [rawLineItems, location.state?.coupon]);
+
+  /* --------- 적립금 사용 --------- */
+  const availablePoints = useMemo(
+    () => (uid ? (getRewards(uid).points || 0) : 0),
+    [uid]
+  );
+  const [pointsToUse, setPointsToUse] = useState(0);
+  const maxUseable = useMemo(
+    () => Math.max(0, Math.min(availablePoints, total)),
+    [availablePoints, total]
+  );
+  const onChangePoints = (v) => {
+    const n = Number(String(v ?? "").replace(/[^\d.-]/g, "")) || 0;
+    setPointsToUse(Math.min(Math.max(0, n), maxUseable));
+  };
+  const payTotal = useMemo(
+    () => Math.max(0, total - (pointsToUse || 0)),
+    [total, pointsToUse]
+  );
+
 
   /* ---------------------- 폼 상태 ---------------------- */
   const [buyer, setBuyer] = useState("");
@@ -148,7 +191,9 @@ export default function Payment() {
       subtotal,
       shipFee,
       coupon: couponAmt,
-      total,
+      total: payTotal,
+      pointsUsed: Math.min(pointsToUse || 0, maxUseable),
+
     };
 
     navigate("/payment2", { state: payload });
@@ -451,13 +496,32 @@ export default function Payment() {
                   <p>{fmt(couponAmt)}</p>
                 </div>
               </li>
+              {/* ✅ 적립금 사용 */}
+              <li>
+                <div id="payment4-pts" style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
+                  <p>적립금 사용</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={pointsToUse}
+                      onChange={(e) => onChangePoints(e.target.value)}
+                      style={{ width: 100, textAlign: "right" }}
+                    />
+                    <button type="button" onClick={() => setPointsToUse(maxUseable)}>전액사용</button>
+                    <span style={{ color: "#666", fontSize: 12 }}>보유 {fmt(availablePoints)}</span>
+                  </div>
+                </div>
+              </li>
+
 
               <div className="title-underline"></div>
 
               <li>
                 <div id="payment5">
                   <p>총 결제 금액</p>
-                  <p>{fmt(total)}</p>
+                  <p>{fmt(payTotal)}</p>
+
                 </div>
               </li>
             </ul>

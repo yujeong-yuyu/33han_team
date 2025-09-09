@@ -4,12 +4,9 @@ import "./NewsCard.css";
 
 export default function NewsCard({
   img,
-  source = "중앙일보",
-  time = "21시간",
+  source = "",
+  time = "",
   title = "제목",
-  likes = 0,
-  comments = 0,
-  isSaved = false,
   /** 슬라이드 제어(옵션) */
   onPrev,
   onNext,
@@ -52,7 +49,7 @@ export default function NewsCard({
       </div>
 
       {/* 좌하단 액션 */}
-      <div className="news-actions">
+     {/*  <div className="news-actions">
         <button className="btn" type="button" aria-label={`좋아요 ${likes}개`}>
           <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
             <path d="M7 22h-2a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h2m5-5l1 4h7a2 2 0 0 1 2 2v1.5a2 2 0 0 1-.4 1.2l-4.2 5.6a2 2 0 0 1-1.6.7h-7V7a3 3 0 0 1 3-3z" />
@@ -70,11 +67,9 @@ export default function NewsCard({
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
           </svg>
         </button>
-      </div>
+      </div> */}
 
-      {/* 우하단 배지 */}
-      <span className="badge-hot">인기</span>
-
+      
       {/* 접근성용 */}
       <span className="sr-only">뉴스 카드</span>
     </article>

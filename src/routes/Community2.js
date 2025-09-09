@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../css/Community2.css";
 import { BsCamera } from "react-icons/bs";
 import { RiImageAddFill } from "react-icons/ri";
@@ -8,11 +8,15 @@ import { useAuth } from "../context/AuthContext";
 const SouvenirCommunity = () => {
   const { isLoggedIn, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const editingPost = location.state?.post; // 수정 모드면 post 존재
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [photoSlots, setPhotoSlots] = useState([null, null, null]); // 최소 3개
-  const [selectedPhotoIdx, setSelectedPhotoIdx] = useState(null);
+  const [title, setTitle] = useState(editingPost?.title || "");
+  const [content, setContent] = useState(editingPost?.content || "");
+  const [photoSlots, setPhotoSlots] = useState(
+    editingPost?.photos?.map((url) => ({ file: null, url })) || [null, null, null]
+  );
+  const [selectedPhotoIdx, setSelectedPhotoIdx] = useState(0);
 
   const fileInputs = useRef([]);
 
@@ -22,7 +26,7 @@ const SouvenirCommunity = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        const url = event.target.result; // base64
+        const url = event.target.result;
         setPhotoSlots((prev) =>
           prev.map((p, i) => (i === idx ? { file, url } : p))
         );
@@ -45,20 +49,42 @@ const SouvenirCommunity = () => {
     });
   };
 
-  // 등록 버튼
+  // 등록/수정 버튼
   const handleSubmit = () => {
-    const newPost = {
-      id: Date.now(),
-      author: isLoggedIn?.local ? user?.name : "회원님",
-      title,
-      content,
-      photos: photoSlots.filter(Boolean).map((p) => p.url), // base64 URL
-      date: new Date().toLocaleDateString(),
-      userImg: "", // 프로필 이미지 필요 시 추가
-    };
+    if (!title.trim() || !content.trim()) {
+      alert("제목과 내용을 입력하세요.");
+      return;
+    }
 
     const saved = JSON.parse(localStorage.getItem("communityPosts")) || [];
-    localStorage.setItem("communityPosts", JSON.stringify([newPost, ...saved]));
+
+    if (editingPost) {
+      // 수정 모드
+      const updatedPosts = saved.map((p) =>
+        p.id === editingPost.id
+          ? {
+              ...p,
+              title,
+              content,
+              photos: photoSlots.filter(Boolean).map((p) => p.url),
+              date: new Date().toLocaleDateString(),
+            }
+          : p
+      );
+      localStorage.setItem("communityPosts", JSON.stringify(updatedPosts));
+    } else {
+      // 새 글 작성
+      const newPost = {
+        id: Date.now(),
+        author: isLoggedIn?.local ? user?.name : "회원님",
+        title,
+        content,
+        photos: photoSlots.filter(Boolean).map((p) => p.url),
+        date: new Date().toLocaleDateString(),
+        userImg: "",
+      };
+      localStorage.setItem("communityPosts", JSON.stringify([newPost, ...saved]));
+    }
 
     navigate("/Community");
   };
@@ -93,9 +119,7 @@ const SouvenirCommunity = () => {
             ) : (
               <p>
                 사진을 첨부하세요{" "}
-                <RiImageAddFill
-                  style={{ fontSize: "30px", color: "#2a2a2a" }}
-                />
+                <RiImageAddFill style={{ fontSize: "30px", color: "#2a2a2a" }} />
               </p>
             )}
           </div>
@@ -129,11 +153,7 @@ const SouvenirCommunity = () => {
                   <img
                     src={slot.url}
                     alt={`slot${idx}`}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 ) : (
                   <span style={{ fontSize: "30px", color: "#5e472f" }}>+</span>
@@ -189,7 +209,7 @@ const SouvenirCommunity = () => {
             />
           </div>
 
-         <div className="community-content-text">
+          <div className="community-content-text">
             <textarea
               placeholder="내용을 입력하세요."
               value={content}
@@ -204,7 +224,7 @@ const SouvenirCommunity = () => {
           </div>
 
           <button className="text-submit" onClick={handleSubmit}>
-            <p>등록하기</p>
+            <p>{editingPost ? "수정하기" : "등록하기"}</p>
           </button>
         </div>
       </div>

@@ -75,6 +75,7 @@
     width: 200px;
 }
 
+
 .detail-warp1 #header-right {
     grid-area: right;
     justify-self: end;
@@ -107,6 +108,7 @@
     z-index: 1200;
     overflow-y: auto;
     margin-top: 6px;
+
 }
 
 .detail-warp1 #detail-nav.open {
@@ -264,6 +266,7 @@
     margin-left: auto;
 }
 
+
 /* =========================
    Review
    ========================= */
@@ -305,7 +308,7 @@
     font-size: 16px;
 }
 
-/* ⭐ (중복 통합) 별 버튼 공통 스타일 */
+
 .detail-warp1 .rv-stars {
     display: flex;
     gap: 4px;
@@ -471,6 +474,7 @@
     z-index: 2000;
 }
 
+
 .detail-warp1 #rv-modal .rvm-close,
 .detail-warp1 #rv-edit-modal .rvm-close {
     position: absolute;
@@ -523,6 +527,7 @@
     line-height: 1.7;
     color: #5E472F;
 }
+
 
 .rv-actions .rv-edit-btn,
 .rv-actions .rv-del-btn {
@@ -697,6 +702,7 @@
 /* =========================
    Buybar (scoped)
    ========================= */
+
 .detail-warp1 #detailPage,
 .detail-warp1 .detail-left {
     padding-bottom: calc(var(--buybar-h, 64px) + 24px);
@@ -742,6 +748,7 @@
     transition: transform .2s ease;
 }
 
+
 /* ✅ translateY → rotate 로 수정 */
 .detail-warp1 .detail-buybar-actions[aria-expanded="true"] .caret {
     transform: rotate(180deg);
@@ -753,6 +760,7 @@
     flex-direction: column;
     align-items: flex-end;
 }
+
 
 .detail-warp1 .detail-option {
     margin-top: 35px;
@@ -808,6 +816,7 @@
     font-size: 1.2rem;
 }
 
+
 .detail-warp1 select {
     padding: 7px;
 }
@@ -836,4 +845,5 @@
 .detail-warp1 .detail-cartBtn:hover,
 .detail-warp1 .detail-buyBtn:hover {
     background-color: #9b8d76;
+
 }

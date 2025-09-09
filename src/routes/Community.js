@@ -1,3 +1,4 @@
+// src/routes/Community.jsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -6,11 +7,16 @@ import {
   IoChatbubbleEllipsesOutline,
 } from "react-icons/io5";
 import "../css/Community.css";
-import NewsCard from "../components/NewsCard";
 
-/* ----- 저장소 유틸 ----- */
-const STORAGE_KEY = "communityPosts";
-const loadPosts = () => {
+import NewsCard from "../components/NewsCard";
+import postsData from "../data/CommunityData.json";    // ✅ 기본 데이터
+import { useAuth } from "../context/AuthContext";       // ✅ 로그인 상태
+
+/* ------------------- 저장소 유틸 ------------------- */
+const STORAGE_KEY = "communityPosts";         // 사용자가 작성한 글 저장
+const LIKES_KEY = "communityLikes";           // id별 좋아요 저장(옵션)
+
+const loadSavedPosts = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -18,31 +24,33 @@ const loadPosts = () => {
     return [];
   }
 };
-const savePosts = (list) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-  window.dispatchEvent(
-    new CustomEvent("communityPosts:updated", { detail: { posts: list } })
-  );
+const loadLikesMap = () => {
+  try {
+    const raw = localStorage.getItem(LIKES_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+const saveLikesMap = (map) => {
+  localStorage.setItem(LIKES_KEY, JSON.stringify(map));
 };
 
+/* ------------------- 공통 카드 ------------------- */
 function ComCard({ post, onLike }) {
   const navigate = useNavigate();
   const goDetail = () => {
     if (post.id != null) navigate(`/Community3/${post.id}`);
   };
 
-  const userImg =
-    post.userImg || "https://00anuyh.github.io/SouvenirImg/user.png";
+  const userImg = post.userImg || "https://00anuyh.github.io/SouvenirImg/user.png";
 
   let mainImg = "/img/default-image.png";
   if (post.image) {
     mainImg = post.image;
   } else if (post.photos && post.photos.length > 0) {
     const firstPhoto = post.photos[0];
-    mainImg =
-      typeof firstPhoto === "string"
-        ? firstPhoto
-        : URL.createObjectURL(firstPhoto);
+    mainImg = typeof firstPhoto === "string" ? firstPhoto : URL.createObjectURL(firstPhoto);
   }
 
   return (
@@ -61,7 +69,7 @@ function ComCard({ post, onLike }) {
         </div>
 
         <div className="like-tag-mes">
-          <div role="button" tabIndex={0} onClick={() => onLike(post)}>
+          <div role="button" tabIndex={0} onClick={() => onLike?.(post)}>
             <IoHeartOutline className="ltm-icon" aria-hidden="true" />
             <span className="ltm-num">{Number(post.likes || 0)}</span>
           </div>
@@ -79,43 +87,72 @@ function ComCard({ post, onLike }) {
   );
 }
 
+/* ------------------- 페이지 ------------------- */
 export default function Community() {
   const navigate = useNavigate();
-  const writeNavigate = () => navigate("/Community2");
+  const { isLoggedIn } = useAuth(); // ✅ 로그인 상태
 
-  /* ------------------- 커뮤니티 글 ------------------- */
-  const [posts, setPosts] = useState(() => loadPosts());
+  const writeNavigate = () => {
+    if (!isLoggedIn?.local) {
+      const goLogin = window.confirm("로그인이 필요합니다. 로그인 페이지로 이동하시겠습니까?");
+      if (goLogin) navigate("/Login");
+      return;
+    }
+    navigate("/Community2");
+  };
 
+  /* ===== 커뮤니티 글: 로컬 + JSON 통합 ===== */
+  const [likesMap, setLikesMap] = useState(() => loadLikesMap());
+  const [posts, setPosts] = useState(() => {
+    const saved = loadSavedPosts();
+    const base = Array.isArray(postsData) ? postsData : [];
+    // id가 있는 경우 likesMap 적용
+    const merged = [...saved, ...base].map((p) =>
+      p?.id != null && likesMap[p.id] != null ? { ...p, likes: likesMap[p.id] } : p
+    );
+    return merged;
+  });
+
+  // 저장소/다른 탭 변경 대응
   useEffect(() => {
     const onStorage = (e) => {
-      if (e.key === STORAGE_KEY) setPosts(loadPosts());
+      if (e.key === STORAGE_KEY || e.key === LIKES_KEY) {
+        const saved = loadSavedPosts();
+        const base = Array.isArray(postsData) ? postsData : [];
+        const lm = loadLikesMap();
+        setLikesMap(lm);
+        const merged = [...saved, ...base].map((p) =>
+          p?.id != null && lm[p.id] != null ? { ...p, likes: lm[p.id] } : p
+        );
+        setPosts(merged);
+      }
     };
-    const onCustom = () => setPosts(loadPosts());
     window.addEventListener("storage", onStorage);
-    window.addEventListener("communityPosts:updated", onCustom);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("communityPosts:updated", onCustom);
-    };
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  // 좋아요 증가: state + likesMap(id가 있을 때만 영속)
   const handleLike = useCallback((target) => {
     setPosts((prev) => {
       const next = prev.map((p) => {
-        const isTarget =
-          (target.id != null && p.id === target.id) || p === target;
-        return isTarget
-          ? { ...p, likes: Number(p.likes || 0) + 1 }
-          : p;
+        const isTarget = (target.id != null && p.id === target.id) || p === target;
+        return isTarget ? { ...p, likes: Number(p.likes || 0) + 1 } : p;
       });
-      savePosts(next);
+      // id가 있는 포스트만 로컬 likesMap에 저장
+      if (target.id != null) {
+        setLikesMap((m) => {
+          const updated = { ...m, [target.id]: Number((m[target.id] ?? target.likes ?? 0)) + 1 };
+          saveLikesMap(updated);
+          return updated;
+        });
+      }
       return next;
     });
   }, []);
 
+  // 페이지네이션
   const PAGE_SIZE = 5;
   const [currentPage, setCurrentPage] = useState(1);
-
   const totalPosts = posts.length;
   const totalPages = Math.ceil(totalPosts / PAGE_SIZE);
 
@@ -129,38 +166,85 @@ export default function Community() {
     setCurrentPage(p);
   };
 
-  /* ------------------- 뉴스 API ------------------- */
+  /* ===== 뉴스 배너 (인테리어) ===== */
   const [slides, setSlides] = useState([]);
   const [slideIdx, setSlideIdx] = useState(0);
+  const [newsLoading, setNewsLoading] = useState(true);
+  const [newsError, setNewsError] = useState("");
 
   useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        const res = await fetch(
-          `https://newsapi.org/v2/everything?q=인테리어&language=ko&pageSize=5&sortBy=publishedAt&apiKey=${process.env.REACT_APP_NEWS_KEY}`
-        );
-        const data = await res.json();
+    const NEWS_KEY = process.env.REACT_APP_NEWS_KEY;
+    if (!NEWS_KEY) {
+      setNewsLoading(false);
+      setNewsError("NEWS API 키가 없습니다. .env에 REACT_APP_NEWS_KEY를 설정하세요.");
+      return;
+    }
 
-        if (data.articles) {
-          const mapped = data.articles.map((a) => ({
-            img:
-              a.urlToImage ||
-              "https://via.placeholder.com/620x311?text=No+Image",
-            source: a.source?.name || "뉴스",
-            time: new Date(a.publishedAt).toLocaleString("ko-KR", {
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            title: a.title || "",
-            likes: Math.floor(Math.random() * 10), // 임의값
-            comments: Math.floor(Math.random() * 5), // 임의값
-          }));
-          setSlides(mapped);
+    const KEYWORDS = [
+      "인테리어",
+      "홈스타일링",
+      "홈 데코",
+      "리빙",
+      "공간디자인",
+      "interior",
+      "interior design",
+      "home decor",
+    ];
+    const qString = KEYWORDS.join(" OR ");
+
+    const from = new Date();
+    from.setDate(from.getDate() - 14);
+    const fromISO = from.toISOString();
+
+    const base = new URL("https://newsapi.org/v2/everything");
+    base.searchParams.set("q", qString);
+    base.searchParams.set("searchIn", "title,description");
+    base.searchParams.set("sortBy", "publishedAt");
+    base.searchParams.set("pageSize", "5");
+    base.searchParams.set("from", fromISO);
+    base.searchParams.set("language", "ko"); // 1차: ko
+
+    const toSlides = (articles = []) =>
+      articles.map((a) => ({
+        img: a.urlToImage || "https://via.placeholder.com/620x311?text=No+Image",
+        source: a.source?.name || "뉴스",
+        time: new Date(a.publishedAt || Date.now()).toLocaleString("ko-KR", {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        title: a.title || "",
+        likes: Math.floor(Math.random() * 10),
+        comments: Math.floor(Math.random() * 5),
+      }));
+
+    const fetchNews = async () => {
+      setNewsLoading(true);
+      setNewsError("");
+      try {
+        let url = base.toString();
+        let res = await fetch(url, { headers: { "X-Api-Key": NEWS_KEY } });
+        let data = await res.json();
+        if (data.status !== "ok") throw new Error(data.message || "NewsAPI error");
+        let articles = data.articles || [];
+
+        if (!articles.length) {
+          const url2 = new URL(base);
+          url2.searchParams.delete("language"); // 2차: 언어 완화
+          res = await fetch(url2.toString(), { headers: { "X-Api-Key": NEWS_KEY } });
+          data = await res.json();
+          if (data.status !== "ok") throw new Error(data.message || "NewsAPI error");
+          articles = data.articles || [];
         }
-      } catch (err) {
-        console.error("뉴스 불러오기 실패:", err);
+
+        setSlides(toSlides(articles));
+      } catch (e) {
+        console.error("[NewsAPI] failed:", e);
+        setNewsError("인테리어 관련 뉴스를 불러오지 못했습니다.");
+        setSlides([]);
+      } finally {
+        setNewsLoading(false);
       }
     };
 
@@ -169,17 +253,22 @@ export default function Community() {
 
   const totalSlides = slides.length;
   const nextSlide = useCallback(() => {
-    setSlideIdx((i) => (i + 1) % totalSlides);
+    setSlideIdx((i) => (i + 1) % Math.max(1, totalSlides));
   }, [totalSlides]);
   const prevSlide = useCallback(() => {
-    setSlideIdx((i) => (i - 1 + totalSlides) % totalSlides);
+    setSlideIdx((i) => (i - 1 + Math.max(1, totalSlides)) % Math.max(1, totalSlides));
   }, [totalSlides]);
 
-  /* ------------------- 렌더 ------------------- */
+  /* ===== 렌더 ===== */
   return (
     <div className="comwarp1">
+      {/* 뉴스 배너 */}
       <div className="newsBanner">
-        {slides.length > 0 ? (
+        {newsLoading ? (
+          <p>뉴스 불러오는 중...</p>
+        ) : newsError ? (
+          <p>{newsError}</p>
+        ) : totalSlides > 0 ? (
           <NewsCard
             {...slides[slideIdx]}
             index={slideIdx}
@@ -188,16 +277,18 @@ export default function Community() {
             onNext={totalSlides > 1 ? nextSlide : undefined}
           />
         ) : (
-          <p>뉴스 불러오는 중...</p>
+          <p>표시할 인테리어 뉴스가 없습니다.</p>
         )}
       </div>
 
+      {/* 타이틀 */}
       <div className="toptitle">
         <div className="titleleft" />
         <h2>Community</h2>
         <div className="titleright" />
       </div>
 
+      {/* 탭/작성하기 */}
       <div className="comTap">
         <button type="button" className="combtn">내 글 찾기</button>
         <button type="button" className="combtn">나의 활동</button>
@@ -206,6 +297,7 @@ export default function Community() {
         </button>
       </div>
 
+      {/* 리스트 + 페이지네이션 */}
       <div className="comList">
         {totalPosts === 0 ? (
           <div className="comEmpty">
@@ -217,9 +309,7 @@ export default function Community() {
         ) : (
           <>
             {pagePosts.map((post, idx) => (
-              <React.Fragment
-                key={post.id ?? `p-${(currentPage - 1) * PAGE_SIZE + idx}`}
-              >
+              <React.Fragment key={post.id ?? `p-${(currentPage - 1) * PAGE_SIZE + idx}`}>
                 <ComCard post={post} onLike={handleLike} />
                 {idx !== pagePosts.length - 1 && <div className="comLine" />}
               </React.Fragment>
@@ -227,11 +317,7 @@ export default function Community() {
           </>
         )}
 
-        <div
-          className="comPageNum"
-          role="navigation"
-          aria-label="페이지네이션"
-        >
+        <div className="comPageNum" role="navigation" aria-label="페이지네이션">
           <button
             type="button"
             onClick={() => goPage(currentPage - 1)}
@@ -240,12 +326,8 @@ export default function Community() {
             이전
           </button>
 
-          {Array.from(
-            { length: Math.max(1, totalPages) },
-            (_, i) => i + 1
-          ).map((n) => {
-            const active =
-              n === Math.min(currentPage, Math.max(1, totalPages));
+          {Array.from({ length: Math.max(1, totalPages) }, (_, i) => i + 1).map((n) => {
+            const active = n === Math.min(currentPage, Math.max(1, totalPages));
             return (
               <button
                 type="button"
@@ -263,9 +345,7 @@ export default function Community() {
           <button
             type="button"
             onClick={() => goPage(currentPage + 1)}
-            disabled={
-              Math.max(1, totalPages) <= 1 || currentPage === totalPages
-            }
+            disabled={Math.max(1, totalPages) <= 1 || currentPage === totalPages}
           >
             다음
           </button>

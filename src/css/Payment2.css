@@ -16,6 +16,7 @@
     margin-top: 10px;
 }
 
+
 .circle, .circle2 {
     width: 40px;
     height: 40px;
@@ -23,6 +24,7 @@
     border: 1px solid #5e472f;
     margin: 30px 60px 10px 60px;
 }
+
 
 .circle { background-color: #fff7e4; }
 .circle2 { background-color: #06301a; }
@@ -33,6 +35,7 @@
     text-align: center;
     margin-top: 10px;
 }
+
 
 .progress-nav, .progress-nav2 {
     text-align: center;
@@ -97,6 +100,7 @@
     font-size: 30px;
 }
 
+
 .payment-final-button1 { background-color: #5e472f; }
 .payment-final-button1:hover { background-color: #795d40; }
 
@@ -129,6 +133,7 @@
     list-style: none;
     justify-content: space-between;
 }
+
 #cart-item ul li:nth-child(2){
     margin-left: 600px;
 }
@@ -179,11 +184,13 @@
     border-bottom: 1px solid #5e472f;
 }
 
+
 .cart-item-title, .cart-item-color, .cart-item-size, .cart-item-price, .cart-item-serialnumber {
     margin: 5px 0;
     font-size: 20px;
     font-weight: bold;
 }
+
 .payment2-delivery-price{
     margin-left: 145px;
     padding-top: 30px;
@@ -199,6 +206,7 @@
     margin-top: 60px;
     gap: 5px;
 }
+
 
 /* 카트 푸터 */
 #cart-footer2 {
@@ -223,6 +231,7 @@
     font-weight: bold;
 }
 
+
 .cart-total-payment4, .cart-total-personal {
     display: flex;
     flex-direction: column;
@@ -231,6 +240,7 @@
     font-weight: bold;
     color: #91704c;
 }
+
 .cart-total-payment4 ul{
     margin-top: 35px;
 }

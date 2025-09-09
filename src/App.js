@@ -1,6 +1,7 @@
 // BrowserRouter는 index.js에서만! (App에는 넣지 마세요)
 import "./App.css";
 import { Routes, Route, Outlet } from "react-router-dom";
+
 import { useEffect, useState } from "react";
 
 import ScrollToTop from "./components/ScrollToTop";
@@ -45,6 +46,7 @@ function WithoutHeader() {
 }
 
 export default function App() {
+
   const [showChatbot, setShowChatbot] = useState(false);
 
   // ✅ 푸터와 겹치는 만큼만 플로팅 UI를 위로 밀기 (사라지지 않음)
@@ -116,6 +118,7 @@ export default function App() {
             <Route path="detail/:slug" element={<Detail />} />
             <Route path="detail" element={<Detail />} />
           </Route>
+
 
           <Route
             path="*"

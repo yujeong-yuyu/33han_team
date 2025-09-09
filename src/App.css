@@ -72,6 +72,7 @@ h3 {
   margin: 0 auto;
 }
 
+
 /* 전역 변수: 기본 여백 + 푸터 겹침 보정 */
 :root {
   --fab-base-bottom: 15px;
