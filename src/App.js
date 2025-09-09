@@ -1,3 +1,4 @@
+
 // BrowserRouter는 index.js에서만! (App에는 넣지 마세요)
 import "./App.css";
 import { Routes, Route, Outlet } from "react-router-dom";
@@ -146,3 +147,4 @@ export default function App() {
     </>
   );
 }
+

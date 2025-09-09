@@ -342,8 +342,10 @@
   cursor: pointer;
 }
 
+
 #pay .btn1 {
   padding-top: 10px;
+
 }
 
 #pay button:hover {
@@ -485,7 +487,6 @@
 }
 
 
-
 #payment5 {
   margin-top: 20px;
 }
@@ -528,6 +529,7 @@
 #payment-wrap button p {
   font-size: 1.7rem;
   color: white;
+
 }
 
 
@@ -596,4 +598,6 @@
   color: #fff;
   font-family: "NanumSquareRound", serif;
   padding: 0 5px;
+
+
 }

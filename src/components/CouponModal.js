@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { getSession } from "../utils/localStorage";
+
 import { listCoupons, syncCouponLedgerWithCount, getRewards, pruneExpiredCoupons } from "../utils/rewards";
+
 
 function fmtDate(ts) {
     const d = new Date(ts);
@@ -11,14 +13,17 @@ function fmtDate(ts) {
 }
 
 export default function CouponModal({ open, onClose }) {
+
     const [rows, setRows] = useState([]);
     const [count, setCount] = useState(0);
     // 모달이 열릴 때만 쿠폰 목록 로드
+
 
     useEffect(() => {
         if (!open) return;
         const s = getSession?.();
         const uid = s?.username || s?.userid || null;
+
         if (!uid) { setRows([]); setCount(0); return; }
 
         // ① 만료 정리 → ② 보유/원장 동기화 → ③ 사용 가능 쿠폰만 읽기
@@ -34,12 +39,14 @@ export default function CouponModal({ open, onClose }) {
         setCount(Number(r.coupons) || 0);
     }, [open]);
 
+
     useEffect(() => {
         if (!open) return;
         const onKey = (e) => e.key === "Escape" && onClose?.();
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
     }, [open, onClose]);
+
 
     if (!open) return null;
 
@@ -53,6 +60,7 @@ export default function CouponModal({ open, onClose }) {
                 </div>
 
                 <div className="coupon-modal-body">
+
                     <div className="coupon-summary">보유 쿠폰 <strong>{count}</strong>장</div>
                     {rows.length === 0 && <div className="coupon-empty">사용 가능한 쿠폰이 없습니다.</div>}
 

@@ -10,6 +10,9 @@ import "../css/Community.css";
 
 import NewsCard from "../components/NewsCard";
 
+import { useAuth } from "../context/AuthContext"; // 로그인 상태 컨텍스트
+
+
 /* ----- 저장소 유틸 ----- */
 const STORAGE_KEY = "communityPosts";
 const loadPosts = () => {
@@ -26,6 +29,9 @@ const savePosts = (list) => {
     new CustomEvent("communityPosts:updated", { detail: { posts: list } })
   );
 };
+
+
+/* ----- 카드 컴포넌트 ----- */
 
 function ComCard({ post, onLike }) {
   const navigate = useNavigate();
@@ -83,9 +89,19 @@ function ComCard({ post, onLike }) {
   );
 }
 
+/* ----- 메인 컴포넌트 ----- */
 export default function Community() {
   const navigate = useNavigate();
-  const writeNavigate = () => navigate("/Community2");
+  const { isLoggedIn } = useAuth(); // 로그인 여부 확인
+
+  const writeNavigate = () => {
+    if (!isLoggedIn?.local) {
+      alert("로그인이 필요합니다.");
+      navigate("/Login");
+      return;
+    }
+    navigate("/Community2");
+  };
 
 
   /* ------------------- 커뮤니티 글 ------------------- */
@@ -109,9 +125,9 @@ export default function Community() {
       const next = prev.map((p) => {
         const isTarget =
           (target.id != null && p.id === target.id) || p === target;
-        return isTarget
-          ? { ...p, likes: Number(p.likes || 0) + 1 }
-          : p;
+
+        return isTarget ? { ...p, likes: Number(p.likes || 0) + 1 } : p;
+
       });
       savePosts(next);
       return next;
@@ -160,8 +176,10 @@ export default function Community() {
               minute: "2-digit",
             }),
             title: a.title || "",
-            likes: Math.floor(Math.random() * 10), // 임의값
-            comments: Math.floor(Math.random() * 5), // 임의값
+
+            likes: Math.floor(Math.random() * 10),
+            comments: Math.floor(Math.random() * 5),
+
           }));
           setSlides(mapped);
         }
@@ -234,52 +252,43 @@ export default function Community() {
           </>
         )}
 
+        {totalPosts > 0 && (
+          <div className="comPageNum" role="navigation" aria-label="페이지네이션">
+            <button
+              type="button"
+              onClick={() => goPage(currentPage - 1)}
+              disabled={Math.max(1, totalPages) <= 1 || currentPage === 1}
+            >
+              이전
+            </button>
 
-        <div
-          className="comPageNum"
-          role="navigation"
-          aria-label="페이지네이션"
-        >
-          <button
-            type="button"
-            onClick={() => goPage(currentPage - 1)}
-            disabled={Math.max(1, totalPages) <= 1 || currentPage === 1}
-          >
-            이전
-          </button>
+            {Array.from({ length: Math.max(1, totalPages) }, (_, i) => i + 1).map((n) => {
+              const active =
+                n === Math.min(currentPage, Math.max(1, totalPages));
+              return (
+                <button
+                  type="button"
+                  key={n}
+                  className={active ? "active" : ""}
+                  onClick={() => goPage(n)}
+                  disabled={totalPages <= 1}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {n}
+                </button>
+              );
+            })}
 
+            <button
+              type="button"
+              onClick={() => goPage(currentPage + 1)}
+              disabled={Math.max(1, totalPages) <= 1 || currentPage === totalPages}
+            >
+              다음
+            </button>
+          </div>
+        )}
 
-          {Array.from(
-            { length: Math.max(1, totalPages) },
-            (_, i) => i + 1
-          ).map((n) => {
-            const active =
-              n === Math.min(currentPage, Math.max(1, totalPages));
-            return (
-              <button
-                type="button"
-                key={n}
-                className={active ? "active" : ""}
-                onClick={() => goPage(n)}
-                disabled={totalPages <= 1}
-                aria-current={active ? "page" : undefined}
-              >
-                {n}
-              </button>
-            );
-          })}
-
-          <button
-            type="button"
-            onClick={() => goPage(currentPage + 1)}
-
-            disabled={
-              Math.max(1, totalPages) <= 1 || currentPage === totalPages
-            }
-          >
-            다음
-          </button>
-        </div>
       </div>
     </div>
   );
