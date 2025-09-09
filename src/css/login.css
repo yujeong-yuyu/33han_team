@@ -11,9 +11,6 @@
   height: 130px;
   margin: 0 auto;
   margin-top: 50px;
-
-  margin-bottom: 100px;
-
 }
 
 #login-progress ul {
@@ -518,4 +515,55 @@
   text-decoration: underline;
   color: #06301a;
   font-family: "Playfair Display", serif;
+}
+
+
+/* 관리자 로그인 */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-panel {
+  width: 100%;
+  max-width: 360px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
+}
+
+.modal-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.modal-form input {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.modal-error {
+  color: #d33;
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+
+.modal-sub {
+  margin-top: 8px;
+  text-align: right;
 }

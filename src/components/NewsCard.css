@@ -13,7 +13,7 @@
     height: 100%;
     overflow: hidden;
     color: var(--fg);
-    background: #fff center/cover no-repeat;
+    background: #fff center/contain no-repeat;
     background-image: var(--img);
 }
 
@@ -28,85 +28,49 @@
 /* 상단 메타 */
 .news-meta {
     position: absolute;
-    left: var(--pad);
     top: var(--pad);
     display: flex;
     gap: 8px;
     align-items: center;
     z-index: 1;
     font-size: 13px;
+    background-color: rgba(128, 128, 128, 0.438);
+    width: 100%;
+    padding: 5px 10px;
 }
 
 .news-meta .logo {
     width: 18px;
     height: 18px;
     border-radius: 4px;
-    background: #ff5a3d;
     display: inline-block;
 }
 
 .news-meta .sep {
-    opacity: .6;
+    opacity: 1;
 }
 
 /* 제목 */
 .news-title {
     position: absolute;
-    left: var(--pad);
-    right: var(--pad);
+    left: 50px;
     bottom: 64px;
     z-index: 1;
     font-weight: 800;
     line-height: 1.18;
     letter-spacing: -0.2px;
     font-size: clamp(18px, 3.2vw, 28px);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, .5);
-}
+    color: #fff;
 
-/* 좌하단 액션 */
-.news-actions {
-    position: absolute;
-    left: var(--pad);
-    bottom: var(--pad);
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    z-index: 1;
-    font-size: 13px;
-    color: var(--muted);
-}
-
-.news-actions .btn {
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-    opacity: .95;
-    cursor: pointer;
-    user-select: none;
-    background: transparent;
-    border: 0;
-    color: inherit;
-    padding: 2px 0;
-}
-
-.news-actions .btn svg {
-    width: 18px;
-    height: 18px;
-}
-
-/* 우하단 배지 */
-.badge-hot {
-    position: absolute;
-    right: var(--pad);
-    bottom: var(--pad);
-    background: rgba(0, 0, 0, .55);
-    border: 1px solid rgba(255, 255, 255, .25);
-    padding: 6px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    z-index: 1;
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
+    /* ⬇️ 추가: 200px에서 … 처리 */
+    width: 900px;
+    /* 텍스트 박스 너비 */
+    white-space: nowrap;
+    /* 한 줄로 */
+    overflow: hidden;
+    /* 넘치는 부분 숨김 */
+    text-overflow: ellipsis;
+    /* 끝에 … 표시 */
 }
 
 /* 좌우 네비 */

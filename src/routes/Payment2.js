@@ -1,10 +1,8 @@
 // src/pages/Payment2.jsx
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-
-import { spendPoints, setPurchaseFlag, markRecentPurchase, addPoints, markCouponUsed, listCoupons } from "../utils/rewards";
-
-
+import { setPurchaseFlag, markRecentPurchase, addPoints } from "../utils/rewards";
+import { spendPoints } from "../utils/rewards";
 import { getSession } from "../utils/localStorage";
 import { saveOrder, createOrderId } from "../utils/orders"; // 존재하지 않으면 try/catch 폴백
 import { tagPurchased, removeMany } from "../utils/cart";
@@ -135,42 +133,7 @@ export default function Payment2() {
     { product: 0, delivery: 0 }
   );
   const grandTotal = totals.product + totals.delivery;
-
-  const couponData = payload?.coupon;
-
-  // ✅ 쿠폰 금액 산정(모든 케이스 처리)
-  let couponAmt = 0;
-  if (typeof couponData === "object" && couponData) {
-    // 1) amount가 오면 그대로
-    couponAmt = toNumber(couponData.amount, 0);
-
-    // 2) amount가 없으면 percent/rate로 계산 (상품합계 기준)
-    if (!couponAmt) {
-      const rate =
-        (typeof couponData.rate === "number" ? couponData.rate : null) ??
-        (typeof couponData.percent === "number" ? couponData.percent / 100 : null);
-      if (rate) couponAmt = Math.floor(totals.product * rate);
-    }
-
-    // 3) 그래도 0이면 원장에서 찾아서 보정
-    if (!couponAmt && uid && couponData.id) {
-      const found = listCoupons(uid, { includeUsed: true, excludeExpired: false })
-        .find(c => c.id === couponData.id);
-      if (found) {
-        if (found.amount) {
-          couponAmt = toNumber(found.amount, 0);
-        } else {
-          const rate2 =
-            (typeof found.rate === "number" ? found.rate : null) ??
-            (typeof found.percent === "number" ? found.percent / 100 : null) ?? 0;
-          couponAmt = Math.floor(totals.product * rate2);
-        }
-      }
-    }
-  } else {
-    // 숫자로 넘어오는 경우
-    couponAmt = toNumber(couponData ?? 0, 0);
-  }
+  const couponAmt = toNumber(payload?.coupon ?? 0, 0);
   const pointsUsed = toNumber(payload?.pointsUsed ?? 0, 0);
   const paidTotal = Math.max(0, grandTotal - couponAmt - pointsUsed);
 
@@ -212,19 +175,6 @@ export default function Payment2() {
     }
     sessionStorage.setItem(flag, "1");
   }, [uid, items, pointsUsed, orderId]);
-
-
-  React.useEffect(() => {
-    if (!items.length) return;
-    const flag = `couponConsumed:${orderId}`;
-    if (sessionStorage.getItem(flag) === "1") return;
-
-    const c = (typeof couponData === "object") ? couponData : null;
-    if (uid && c?.id) {
-      markCouponUsed(uid, c.id); // 원장에 used=true, 보유 개수 감소
-    }
-    sessionStorage.setItem(flag, "1");
-  }, [uid, items, orderId, couponData]);
 
 
   /* ✅ 구매 플래그(이벤트 토큰) */

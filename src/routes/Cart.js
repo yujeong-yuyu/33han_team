@@ -188,7 +188,6 @@ export default function Cart() {
                         onChange={() => toggleOne(it.key)}
                       />
                       <span className="checkmark"></span>
-                      {it.name}
                     </label>
 
                     {/* 상품 이미지 */}
