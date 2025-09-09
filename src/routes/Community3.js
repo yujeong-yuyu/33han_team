@@ -1,5 +1,7 @@
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+
 import {
   IoHeartOutline,
   IoPricetagOutline,
@@ -8,6 +10,7 @@ import {
 import { FaRegEdit, FaRegTrashAlt } from "react-icons/fa";
 import "../css/Community3.css";
 import postsData from "../data/CommunityData.json";
+
 import { useAuth } from "../context/AuthContext"; // AuthContext에서 로그인 정보
 
 const Community3 = () => {
@@ -66,6 +69,7 @@ const Community3 = () => {
     }
   };
 
+
   return (
     <div className="warp1">
       <div className="toptitle">
@@ -73,6 +77,7 @@ const Community3 = () => {
         <h2>Community</h2>
         <div className="titleright" />
       </div>
+
 
       <div className="community3-Box">
         <div className="comdetail_community-content-l">
@@ -135,6 +140,7 @@ const Community3 = () => {
           </div>
         </div>
       </div>
+
     </div>
   );
 };

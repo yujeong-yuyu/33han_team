@@ -1,13 +1,39 @@
-import { useMemo, useState } from "react";
+
+// src/pages/Payment.jsx
+import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+
+import { getRewards, listCoupons } from "../utils/rewards";
+import { getSession } from "../utils/localStorage";
+
+
 import "../css/Payment.css";
 
 export default function Payment() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const session = getSession?.();
+  const uid = session?.username || session?.userid || null;
+  const [couponOptions, setCouponOptions] = useState([]);
+  const [selectedCouponId, setSelectedCouponId] = useState(null);
+
+  // 유효(미사용+미만료) 쿠폰 불러오기
+  useEffect(() => {
+    if (!uid) { setCouponOptions([]); return; }
+    const rows = listCoupons(uid, { includeUsed: false, excludeExpired: true });
+    // 최신 발급순 정렬
+    rows.sort((a, b) => new Date(b.issuedAt) - new Date(a.issuedAt));
+    setCouponOptions(rows);
+  }, [uid]);
+
+
+  // ---- 원본 아이템 안전 수령: lineItems | items | 단일 객체도 배열화 ----
+  const incoming =
+    location.state?.lineItems ?? location.state?.items ?? [];
   const rawLineItems = location.state?.lineItems || []; // Cart에서 넘어온 원본
 
-  // ---------------------- helpers ----------------------
+
   const toInt = (v, fallback = 0) => {
     const n = Number(String(v ?? "").replace(/[^\d.-]/g, ""));
     return Number.isFinite(n) ? n : fallback;
@@ -20,26 +46,29 @@ export default function Payment() {
       maximumFractionDigits: 0,
     }).format(toInt(v, 0));
 
-  // ✅ Cart의 원본 key/메타를 포함한 단일 정규화 함수
+  // ✅ 어떤 키가 와도 표준형으로 정규화(표시/정산 + 메타 유지)
   const normItem = (it = {}) => ({
-    // 표시용
+    // 표시/정산 필드
     name: it.name ?? it.title ?? "상품",
     unitPrice: toInt(it.unitPrice ?? it.price ?? it.amount ?? 0),
     qty: Math.max(1, toInt(it.qty ?? it.quantity ?? 1, 1)),
-    delivery: toInt(it.delivery ?? 0),
+    delivery: toInt(
+      it.delivery ?? it.deliveryCost ?? it.shipping ?? it.shippingFee ?? 0
+    ),
 
-    // 결제/마이페이지 연동용 메타
+    // 메타 필드(다음 단계/마이페이지 연동용)
     sourceKey: it.key ?? it.sourceKey ?? it.originalKey ?? null,
     image: it.thumb ?? it.image ?? it.src ?? null,
     brand: it.brand ?? "",
-    optionLabel: it.optionLabel ?? "",
+    optionLabel: it.optionLabel ?? it.optionName ?? "",
+
     color: it.color ?? it.optionColor ?? null,
     size: it.size ?? it.optionSize ?? null,
     orderNo: it.orderNo ?? it.orderId ?? it.id ?? null,
     id: it.id ?? it.slug ?? null,
   });
 
-  // ---------------------- 금액/표시값 계산 ----------------------
+
   const {
     items,
     subtotal,
@@ -49,29 +78,89 @@ export default function Payment() {
     firstName,
     extraCount,
   } = useMemo(() => {
-    const items = Array.isArray(rawLineItems) ? rawLineItems.map(normItem) : [];
+
+    const items = Array.isArray(rawLineItems)
+      ? rawLineItems.map(normItem)
+      : [];
+
 
     const subtotal = items.reduce((s, it) => s + it.unitPrice * it.qty, 0);
     const shipFee = items.reduce((s, it) => s + it.delivery, 0);
 
-    // 쿠폰: 숫자 또는 { amount } 모두 대응 (현재 0)
-    const rawCoupon = location.state?.coupon ?? 0;
+
+    // 선택한 쿠폰 금액 산정 (amount 우선, 없으면 percent/rate로 계산)
+    const chosen = couponOptions.find(c => c.id === selectedCouponId) || null;
+    const calcFromPercent =
+      Math.floor(subtotal * ((chosen?.rate ?? (chosen?.percent ? chosen.percent / 100 : 0)) || 0));
     const couponAmt = toInt(
-      (typeof rawCoupon === "object" ? rawCoupon?.amount : rawCoupon) ?? 0
+      (chosen ? (Number(chosen.amount) || calcFromPercent) : 0), 0
+
     );
 
     const total = Math.max(0, subtotal + shipFee - couponAmt);
 
-    // "상품명 (외 N개)" — N = 총 수량 - 첫 상품 수량
+
+    // "상품명 (외 N개)" 표기
     const firstName = items[0]?.name ?? "";
-    const totalQty = items.reduce((s, it) => s + it.qty, 0);
-    const firstQty = items[0]?.qty ?? 0;
-    const extraCount = Math.max(0, totalQty - firstQty);
 
-    return { items, subtotal, shipFee, couponAmt, total, firstName, extraCount };
-  }, [rawLineItems, location.state?.coupon]);
+    // 1) 서로 다른 상품 개수(고유 키 기준) 우선
+    const keyOf = (x) =>
+      (x.id ?? "") +
+      "|" +
+      (x.name ?? "") +
+      "|" +
+      (x.optionLabel ?? "") +
+      "|" +
+      (x.color ?? "") +
+      "|" +
+      (x.size ?? "");
+    const distinctCount = new Set(items.map(keyOf)).size;
+    const distinctExtra = Math.max(0, distinctCount - 1);
 
-  // ---------------------- 폼 상태 ----------------------
+    // 2) 백업: 총 수량 기준 (총 수량 - 첫 상품 수량)
+    const totalQty = items.reduce((s, it) => s + (Number(it.qty) || 0), 0);
+    const firstQty = Number(items[0]?.qty) || 0;
+    const qtyExtra = Math.max(0, totalQty - firstQty);
+
+    const extraCount = distinctExtra > 0 ? distinctExtra : qtyExtra;
+
+    return {
+      items,
+      subtotal,
+      shipFee,
+      couponAmt,
+      total,
+      firstName,
+      extraCount,
+    };
+  }, [rawLineItems, couponOptions, selectedCouponId]);
+
+  /* --------- 적립금 사용 --------- */
+  const availablePoints = useMemo(
+    () => (uid ? (getRewards(uid).points || 0) : 0),
+    [uid]
+  );
+  const [pointsToUse, setPointsToUse] = useState(0);
+  const maxUseable = useMemo(
+    () => Math.max(0, Math.min(availablePoints, total)),
+    [availablePoints, total]
+  );
+  // 쿠폰/합계가 바뀌면 현재 입력된 포인트를 상한에 맞게 자동 보정
+  useEffect(() => {
+    setPointsToUse(p => Math.min(p, Math.max(0, maxUseable)));
+  }, [maxUseable]);
+
+  const onChangePoints = (v) => {
+    const n = Number(String(v ?? "").replace(/[^\d.-]/g, "")) || 0;
+    setPointsToUse(Math.min(Math.max(0, n), maxUseable));
+  };
+  const payTotal = useMemo(
+    () => Math.max(0, total - (pointsToUse || 0)),
+    [total, pointsToUse]
+  );
+
+  /* ---------------------- 폼 상태 ---------------------- */
+
   const [buyer, setBuyer] = useState("");
   const [receiver, setReceiver] = useState("");
   const [zip, setZip] = useState("");
@@ -93,7 +182,9 @@ export default function Payment() {
     { value: "pickup", label: "직접수령" },
   ];
 
-  // ---------------------- 제출 ----------------------
+
+  /* ---------------------- 제출 ---------------------- */
+
   const onSubmit = (e) => {
     e.preventDefault();
     if (!buyer || !receiver || !zip || !addr1 || !phone2 || !phone3 || !payMethod) {
@@ -108,15 +199,29 @@ export default function Payment() {
       phone: `${phone1}-${phone2}-${phone3}`,
       deliveryNote,
       payMethod,
-      lineItems: items, // ✅ 원본 key/메타를 포함한 정규화 아이템 전달
+
+      // ✅ 정규화된 아이템을 그대로 전달(다음 단계에서 바로 사용 가능)
+      lineItems: items,
       subtotal,
       shipFee,
-      coupon: couponAmt,
-      total,
+      coupon: selectedCouponId
+        ? {
+          id: selectedCouponId,
+          amount: couponAmt,
+          title:
+            couponOptions.find(c => c.id === selectedCouponId)?.title || "쿠폰",
+        }
+        : 0,
+      total: payTotal,
+      pointsUsed: Math.min(pointsToUse || 0, maxUseable),
+
     };
 
     navigate("/payment2", { state: payload });
   };
+
+
+  /* ---------------------- Render ---------------------- */
 
   return (
     <form onSubmit={onSubmit}>
@@ -205,6 +310,7 @@ export default function Payment() {
                   <button
                     type="button"
                     onClick={() => {
+
                       const element = document.getElementById("postcode-container");
                       if (!element) return;
 
@@ -225,11 +331,11 @@ export default function Payment() {
                       }).embed(element);
 
                       element.style.display = "block"; // 레이어 보이기
+
                     }}
                   >
                     우편번호 검색
                   </button>
-
 
                 </div>
               </div>
@@ -249,6 +355,7 @@ export default function Payment() {
                 />
               </div>
             </li>
+
             {/* -------------------- 레이어 컨테이너 -------------------- */}
             <div
               id="postcode-container"
@@ -467,10 +574,52 @@ export default function Payment() {
                 </div>
               </li>
 
+              {/* 쿠폰 선택 */}
+              <li>
+                <div id="payment2-coupon">
+                  <p className="payment2-coupon-title">쿠폰</p>
+                  <div className="payment2-coupon-sel">
+                    <select
+                      value={selectedCouponId || ""}
+                      onChange={(e) => setSelectedCouponId(e.target.value || null)}
+                    >
+                      <option value="">선택 안함</option>
+                      {couponOptions.map(c => (
+                        <option key={c.id} value={c.id}>
+                          {(c.title || "쿠폰")} · {c.percent ?? Math.round((c.rate || 0) * 100) ?? 0}% · -
+                          {new Intl.NumberFormat("ko-KR").format(Number(c.amount || 0))}원
+                        </option>
+                      ))}
+                    </select>
+                    {selectedCouponId && (
+                      <button className="pay2-button" type="button" onClick={() => setSelectedCouponId(null)}>적용 취소</button>
+                    )}
+                  </div>
+                </div>
+              </li>
+
+
               <li>
                 <div id="payment4">
                   <p>쿠폰 할인 금액</p>
                   <p>{fmt(couponAmt)}</p>
+                </div>
+              </li>
+
+              {/* ✅ 적립금 사용 */}
+              <li>
+                <div id="payment4-pts" >
+                  <p>적립금 사용</p>
+                  <div className="payment4-input" >
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={pointsToUse}
+                      onChange={(e) => onChangePoints(e.target.value)}
+                    />
+                    <button className="pay4-button" type="button" onClick={() => setPointsToUse(maxUseable)}>전액사용</button>
+                    <span style={{ color: "#666", fontSize: 12 }}>보유 {fmt(availablePoints)}</span>
+                  </div>
                 </div>
               </li>
 
@@ -479,7 +628,9 @@ export default function Payment() {
               <li>
                 <div id="payment5">
                   <p>총 결제 금액</p>
-                  <p>{fmt(total)}</p>
+
+                  <p>{fmt(payTotal)}</p>
+
                 </div>
               </li>
             </ul>
@@ -505,6 +656,8 @@ export default function Payment() {
           </div>
         </div>
       </div>
-    </form>
+
+    </form >
   );
 }
+

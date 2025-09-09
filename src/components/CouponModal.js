@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { getSession } from "../utils/localStorage";
-import { listCoupons, syncCouponLedgerWithCount, getRewards } from "../utils/rewards";
+
+import { listCoupons, syncCouponLedgerWithCount, getRewards, pruneExpiredCoupons } from "../utils/rewards";
+
 
 function fmtDate(ts) {
     const d = new Date(ts);
@@ -11,25 +13,33 @@ function fmtDate(ts) {
 }
 
 export default function CouponModal({ open, onClose }) {
-    const [coupons, setCoupons] = useState([]);
 
+    const [rows, setRows] = useState([]);
+    const [count, setCount] = useState(0);
     // 모달이 열릴 때만 쿠폰 목록 로드
+
+
     useEffect(() => {
         if (!open) return;
         const s = getSession?.();
         const uid = s?.username || s?.userid || null;
-        if (!uid) { setCoupons([]); return; }
 
-        // ✅ 보유 개수와 원장 동기화(과거에 addCoupons만 했던 건 보정)
+        if (!uid) { setRows([]); setCount(0); return; }
+
+        // ① 만료 정리 → ② 보유/원장 동기화 → ③ 사용 가능 쿠폰만 읽기
+        pruneExpiredCoupons(uid);
         syncCouponLedgerWithCount(uid);
 
-        const rows = listCoupons(uid, { includeUsed: true, excludeExpired: false });
-        // (선택) 최근 발급순 정렬
-        rows.sort((a, b) => new Date(b.issuedAt) - new Date(a.issuedAt));
-        setCoupons(rows);
+        const list = listCoupons(uid, { includeUsed: false, excludeExpired: true }); // ✅ 사용 가능만
+        list.sort((a, b) => new Date(b.issuedAt) - new Date(a.issuedAt));
+        setRows(list);
+
+        // 헤더 숫자는 보유 카운트 기준으로 맞춤(= MyPage 박스와 동일)
+        const r = getRewards(uid);
+        setCount(Number(r.coupons) || 0);
     }, [open]);
 
-    // ESC 닫기: 열려 있을 때만 리스너 등록
+
     useEffect(() => {
         if (!open) return;
         const onKey = (e) => e.key === "Escape" && onClose?.();
@@ -37,9 +47,7 @@ export default function CouponModal({ open, onClose }) {
         return () => window.removeEventListener("keydown", onKey);
     }, [open, onClose]);
 
-    const count = coupons.length;
 
-    // ✅ Hooks 호출 뒤에 조건부 렌더
     if (!open) return null;
 
     return (
@@ -52,33 +60,27 @@ export default function CouponModal({ open, onClose }) {
                 </div>
 
                 <div className="coupon-modal-body">
-                    <div className="coupon-summary">
-                        보유 쿠폰 <strong>{count}</strong>장
-                    </div>
 
-                    {count === 0 && <div className="coupon-empty">받은 쿠폰이 없습니다.</div>}
+                    <div className="coupon-summary">보유 쿠폰 <strong>{count}</strong>장</div>
+                    {rows.length === 0 && <div className="coupon-empty">사용 가능한 쿠폰이 없습니다.</div>}
 
                     <ul className="coupon-list">
-                        {coupons.map((c) => {
-                            const expired = Date.now() > new Date(c.expiresAt).getTime();
-                            return (
-                                <li key={c.id} className={`coupon-card ${expired ? "is-expired" : ""}`}>
-                                    <div className="coupon-left">
-                                        <div className="coupon-rate"><strong>{c.percent ?? 5}%</strong></div>
-                                        <div className="coupon-title">{c.title || "할인쿠폰"}</div>
-                                    </div>
-                                    <div className="coupon-right">
-                                        <div className="coupon-row"><span className="label">발급일</span><span className="value">{fmtDate(c.issuedAt)}</span></div>
-                                        <div className="coupon-row"><span className="label">사용기한</span><span className="value">{fmtDate(c.expiresAt)} 까지</span></div>
-                                        <div className={`coupon-status ${expired ? "expired" : "active"}`}>
-                                            {expired ? "만료" : (c.used ? "사용됨" : "사용 가능")}
-                                        </div>
-                                    </div>
-                                </li>
-                            );
-                        })}
+                        {rows.map(c => (
+                            <li key={c.id} className="coupon-card">
+                                <div className="coupon-left">
+                                    <div className="coupon-rate"><strong>{c.percent ?? 5}%</strong></div>
+                                    <div className="coupon-title">{c.title || "할인쿠폰"}</div>
+                                </div>
+                                <div className="coupon-right">
+                                    <div className="coupon-row"><span className="label">발급일</span><span className="value">{fmtDate(c.issuedAt)}</span></div>
+                                    <div className="coupon-row"><span className="label">사용기한</span><span className="value">{fmtDate(c.expiresAt)} 까지</span></div>
+                                    <div className="coupon-status active">사용 가능</div>
+                                </div>
+                            </li>
+                        ))}
                     </ul>
                 </div>
+
             </div>
         </div>
     );

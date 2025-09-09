@@ -1,5 +1,7 @@
+
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+
 import "../css/Community2.css";
 import { BsCamera } from "react-icons/bs";
 import { RiImageAddFill } from "react-icons/ri";
@@ -8,6 +10,7 @@ import { useAuth } from "../context/AuthContext";
 const SouvenirCommunity = () => {
   const { isLoggedIn, user } = useAuth();
   const navigate = useNavigate();
+
   const location = useLocation();
   const editingPost = location.state?.post; // 수정 모드면 post 존재
 
@@ -18,6 +21,7 @@ const SouvenirCommunity = () => {
   );
   const [selectedPhotoIdx, setSelectedPhotoIdx] = useState(0);
 
+
   const fileInputs = useRef([]);
 
   // 사진 업로드
@@ -26,7 +30,9 @@ const SouvenirCommunity = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
+
         const url = event.target.result;
+
         setPhotoSlots((prev) =>
           prev.map((p, i) => (i === idx ? { file, url } : p))
         );
@@ -48,6 +54,7 @@ const SouvenirCommunity = () => {
       return prev.slice(0, -1);
     });
   };
+
 
   // 등록/수정 버튼
   const handleSubmit = () => {
@@ -86,6 +93,7 @@ const SouvenirCommunity = () => {
       localStorage.setItem("communityPosts", JSON.stringify([newPost, ...saved]));
     }
 
+
     navigate("/Community");
   };
 
@@ -119,7 +127,9 @@ const SouvenirCommunity = () => {
             ) : (
               <p>
                 사진을 첨부하세요{" "}
+
                 <RiImageAddFill style={{ fontSize: "30px", color: "#2a2a2a" }} />
+
               </p>
             )}
           </div>
@@ -153,7 +163,9 @@ const SouvenirCommunity = () => {
                   <img
                     src={slot.url}
                     alt={`slot${idx}`}
+
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
+
                   />
                 ) : (
                   <span style={{ fontSize: "30px", color: "#5e472f" }}>+</span>
@@ -209,7 +221,9 @@ const SouvenirCommunity = () => {
             />
           </div>
 
+
           <div className="community-content-text">
+
             <textarea
               placeholder="내용을 입력하세요."
               value={content}
@@ -224,7 +238,9 @@ const SouvenirCommunity = () => {
           </div>
 
           <button className="text-submit" onClick={handleSubmit}>
+
             <p>{editingPost ? "수정하기" : "등록하기"}</p>
+
           </button>
         </div>
       </div>

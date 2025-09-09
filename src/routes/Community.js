@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,7 +9,9 @@ import {
 import "../css/Community.css";
 
 import NewsCard from "../components/NewsCard";
+
 import { useAuth } from "../context/AuthContext"; // 로그인 상태 컨텍스트
+
 
 /* ----- 저장소 유틸 ----- */
 const STORAGE_KEY = "communityPosts";
@@ -27,7 +30,9 @@ const savePosts = (list) => {
   );
 };
 
+
 /* ----- 카드 컴포넌트 ----- */
+
 function ComCard({ post, onLike }) {
   const navigate = useNavigate();
   const goDetail = () => {
@@ -50,11 +55,13 @@ function ComCard({ post, onLike }) {
 
   return (
     <div className="comBox">
+
       <div className="comImg" onClick={goDetail}>
         <img src={mainImg} alt="커뮤이미지" />
       </div>
       <div className="comInpo">
         <div className="comUser">
+
           <img src={userImg} alt="커뮤회원" width="60" height="60" />
           <p>{post.author || post.user || "익명"}</p>
         </div>
@@ -96,6 +103,7 @@ export default function Community() {
     navigate("/Community2");
   };
 
+
   /* ------------------- 커뮤니티 글 ------------------- */
   const [posts, setPosts] = useState(() => loadPosts());
 
@@ -117,7 +125,9 @@ export default function Community() {
       const next = prev.map((p) => {
         const isTarget =
           (target.id != null && p.id === target.id) || p === target;
+
         return isTarget ? { ...p, likes: Number(p.likes || 0) + 1 } : p;
+
       });
       savePosts(next);
       return next;
@@ -132,6 +142,7 @@ export default function Community() {
 
   const pagePosts = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
+
     return posts.slice(start, start + PAGE_SIZE);
   }, [posts, currentPage]);
 
@@ -165,8 +176,10 @@ export default function Community() {
               minute: "2-digit",
             }),
             title: a.title || "",
+
             likes: Math.floor(Math.random() * 10),
             comments: Math.floor(Math.random() * 5),
+
           }));
           setSlides(mapped);
         }
@@ -228,6 +241,7 @@ export default function Community() {
         ) : (
           <>
             {pagePosts.map((post, idx) => (
+
               <React.Fragment
                 key={post.id ?? `p-${(currentPage - 1) * PAGE_SIZE + idx}`}
               >
@@ -274,6 +288,7 @@ export default function Community() {
             </button>
           </div>
         )}
+
       </div>
     </div>
   );

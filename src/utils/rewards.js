@@ -288,3 +288,32 @@ export function grantEventCoupon(
   return coupon;
 }
 
+
+// 만료된 미사용 쿠폰을 used=true로 돌리고, 보유 카운트도 줄여줍니다.
+export function pruneExpiredCoupons(uid) {
+  if (!uid) return;
+  const now = Date.now();
+  const ledger = getCouponLedger(uid);
+  let expiredCount = 0;
+
+  const next = ledger.map(c => {
+    const isExpired = new Date(c.expiresAt).getTime() <= now;
+    if (!c.used && isExpired) {
+      expiredCount++;
+      return {
+        ...c,
+        used: true,
+        usedAt: new Date().toISOString(),
+        meta: { ...(c.meta || {}), expired: true },
+      };
+    }
+    return c;
+  });
+
+  if (expiredCount > 0) {
+    setCouponLedger(uid, next);
+    // 보유 쿠폰 수 - 만료 수만큼 감소
+    addCoupons(uid, -expiredCount);
+  }
+}
+
