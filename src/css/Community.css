@@ -1,0 +1,133 @@
+/* <!---------------------
+        섹션시작
+----------------------> */
+.toptitle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 50px 0;
+}
+
+.toptitle .titleleft {
+    width: 40%;
+    height: 2px;
+    background-color: #5E472F;
+}
+
+.toptitle h2 {
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+    font-weight: 500;
+    font-family: "Playfair Display", serif;
+}
+
+.toptitle .titleright {
+    width: 40%;
+    height: 2px;
+    background-color: #5E472F;
+}
+
+.comTap {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 20px;
+    margin: 20px 0 50px 0;
+}
+
+.comTap .combtn {
+    width: 120px;
+    padding: 5px 15px;
+    background-color: #5E472F;
+    color: #FFF7E4;
+    font-size: 1rem;
+    border-radius: 50px;
+    cursor: pointer;
+}
+
+.comList {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 50px;
+}
+
+.comBox {
+    display: flex;
+    gap: 100px;
+    align-items: stretch;
+    padding: 0 50px;
+}
+
+.comImg {
+    flex: 0 0 50%;
+    height: 300px;
+}
+
+.comImg img {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.comInpo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.comUser {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: 60px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.comText {
+    font-size: 1.2rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    line-height: 200%;
+}
+
+.comIcon {
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+    margin-top: auto;
+}
+
+.comIconbtn {
+    width: 45px;
+    height: 45px;
+    padding: 5px 15px;
+    background-color: #5E472F;
+    color: #FFF7E4;
+    font-size: 1rem;
+    border-radius: 50px;
+    cursor: pointer;
+}
+
+.comLine {
+    width: 100%;
+    height: 1px;
+    background-color: #5E472F;
+    margin-bottom: 50px;
+}
+
+.comPageNum {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 50px;
+}
+
+/* <!---------------------
+        섹션끝
+----------------------> */

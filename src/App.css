@@ -1,0 +1,86 @@
+@charset "UTF-8";
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+@font-face {
+  font-family: 'NanumSquareRound';
+  src: url('/public/fonts/NanumSquareRoundOTFR.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  box-sizing: border-box;
+}
+
+body {
+  cursor: url("/public/img/mouse.png") 3 3, auto;
+}
+
+/* 부드러운 스크롤 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 페이지 페이드: transform 사용 금지 (fixed/sticky 깨짐 방지) */
+.page-fade {
+  animation: pageFadeIn .80s ease both;
+  will-change: opacity;
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+html,
+body {
+  margin: 0 auto;
+  padding: 0;
+  background-color: #fff;
+  color: #2a2a2a;
+  font-family: "NanumSquareRound", serif;
+  font-optical-sizing: auto;
+  font-style: none;
+  overflow-x: hidden;
+}
+
+a {
+  color: #2a2a2a;
+  text-decoration: none;
+}
+
+h3 {
+  width: 100%;
+  font-size: 2.2rem;
+  color: #2a2a2a;
+  margin-bottom: 15px;
+  padding: 2px 5px;
+  font-family: "Playfair Display", serif;
+}
+
+.Warp {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.floating-ask {
+  position: fixed;
+  bottom: var(--fab-base-bottom, 15px);
+  right: 30px;
+}
+
+.chatbot-container {
+  z-index: 999;
+  position: fixed;
+  top: 210px;
+  right: 50px;
+}
