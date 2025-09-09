@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -6,6 +7,7 @@ import {
   IoChatbubbleEllipsesOutline,
 } from "react-icons/io5";
 import "../css/Community.css";
+
 import NewsCard from "../components/NewsCard";
 
 /* ----- 저장소 유틸 ----- */
@@ -47,11 +49,13 @@ function ComCard({ post, onLike }) {
 
   return (
     <div className="comBox">
+
       <div className="comImg" onClick={goDetail}>
         <img src={mainImg} alt="커뮤이미지" />
       </div>
       <div className="comInpo">
         <div className="comUser">
+
           <img src={userImg} alt="커뮤회원" width="60" height="60" />
           <p>{post.author || post.user || "익명"}</p>
         </div>
@@ -82,6 +86,7 @@ function ComCard({ post, onLike }) {
 export default function Community() {
   const navigate = useNavigate();
   const writeNavigate = () => navigate("/Community2");
+
 
   /* ------------------- 커뮤니티 글 ------------------- */
   const [posts, setPosts] = useState(() => loadPosts());
@@ -121,6 +126,7 @@ export default function Community() {
 
   const pagePosts = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
+
     return posts.slice(start, start + PAGE_SIZE);
   }, [posts, currentPage]);
 
@@ -217,6 +223,7 @@ export default function Community() {
         ) : (
           <>
             {pagePosts.map((post, idx) => (
+
               <React.Fragment
                 key={post.id ?? `p-${(currentPage - 1) * PAGE_SIZE + idx}`}
               >
@@ -226,6 +233,7 @@ export default function Community() {
             ))}
           </>
         )}
+
 
         <div
           className="comPageNum"
@@ -239,6 +247,7 @@ export default function Community() {
           >
             이전
           </button>
+
 
           {Array.from(
             { length: Math.max(1, totalPages) },
@@ -263,6 +272,7 @@ export default function Community() {
           <button
             type="button"
             onClick={() => goPage(currentPage + 1)}
+
             disabled={
               Math.max(1, totalPages) <= 1 || currentPage === totalPages
             }

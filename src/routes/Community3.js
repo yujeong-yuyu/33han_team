@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -8,6 +9,7 @@ import {
 import { FaRegEdit, FaRegTrashAlt } from "react-icons/fa";
 import "../css/Community3.css";
 import postsData from "../data/CommunityData.json";
+
 
 /* ---------- 스토리지 유틸 ---------- */
 const POSTS_KEY = "communityPosts";       // 사용자 글들
@@ -221,6 +223,7 @@ const Community3 = () => {
         <h2>Community</h2>
         <div className="titleright" />
       </div>
+
 
       {!post ? (
         <p style={{ padding: 24 }}>글을 찾을 수 없습니다.</p>

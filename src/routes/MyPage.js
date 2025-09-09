@@ -12,6 +12,8 @@ import { FaGear } from "react-icons/fa6";
 
 import "../css/mypage.css";
 import GiftModal from "../components/GiftModal";
+import CouponModal from "../components/CouponModal";
+
 
 
 
@@ -32,8 +34,12 @@ const addDays = (d, n) => {
   return x;
 };
 const resolveImg = (src) => {
-  if (!src) return "/img/placeholder.png";
-  return /^https?:\/\//i.test(src) ? src : `${CDN}${src}`;
+  const p = String(src || "");
+  if (!p) return "/img/placeholder.png";     // 1차 폴백: 로컬
+  if (/^https?:\/\//i.test(p)) return p;     // 절대 URL은 그대로
+  if (p.startsWith("/img/")) return p;       // 앱 내 정적자원은 그대로
+  return `${CDN}${p}`;                       // 나머지만 CDN
+
 };
 
 
@@ -107,7 +113,10 @@ const MyPage = () => {
   const [rewards, setRewardsState] = useState({ points: 0, coupons: 0, gifts: 0 });
   const [eventData, setEventData] = useState(null);
   const [open, setOpen] = useState(false);
+  const [openCoupon, setOpenCoupon] = useState(false);
   const [orders, setOrders] = useState([]);
+
+
 
   const { isLoggedIn, user, logoutAll } = useAuth();
   const navigate = useNavigate();
@@ -304,7 +313,25 @@ const MyPage = () => {
                 <div className="mybox-num">{rewards.gifts || 0}</div>
               </div>
 
-              <div className="mybox">
+              <div
+                className={`mybox ${rewards.coupons > 0 ? "is-clickable" : ""}`}
+                role="button" tabIndex={0}
+                title="쿠폰 내역 보기"
+                onClick={() => {
+                  if (rewards.coupons <= 0) return; // 보유 0이면 열지 않음
+                  setOpen(false);            // GiftModal 닫기 (겹침 방지)
+                  setOpenCoupon(true);       // ✅ 쿠폰 모달 열기
+                }}
+                onKeyDown={(e) => {
+                  if (rewards.coupons <= 0) return;
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setOpen(false);
+                    setOpenCoupon(true);
+                  }
+                }}
+              >
+
                 <div className="mybox-title"><img src="https://00anuyh.github.io/SouvenirImg/ticket_icon.svg" alt="ticket_icon" /><span>쿠폰</span></div>
                 <div className="mybox-num">{rewards.coupons || 0}</div>
               </div>
@@ -393,6 +420,8 @@ const MyPage = () => {
         </main>
 
         <GiftModal open={open} onClose={() => setOpen(false)} data={modalData || {}} />
+        <CouponModal open={openCoupon} onClose={() => setOpenCoupon(false)} />
+
       </div>
     </>
   );

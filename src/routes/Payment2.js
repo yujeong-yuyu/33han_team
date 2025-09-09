@@ -2,9 +2,13 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { setPurchaseFlag, markRecentPurchase, addPoints } from "../utils/rewards";
+import { spendPoints } from "../utils/rewards";
 import { getSession } from "../utils/localStorage";
 import { saveOrder, createOrderId } from "../utils/orders"; // 존재하지 않으면 try/catch 폴백
-import { tagPurchased /*, removeMany*/ } from "../utils/cart";
+import { tagPurchased, removeMany } from "../utils/cart";
+
+
+
 import "../css/Payment2.css";
 
 const CDN = "https://00anuyh.github.io/SouvenirImg";
@@ -71,7 +75,8 @@ function readCartFromLS() {
 function normalizeForPayment2(x, i = 0) {
   x = x && typeof x === "object" ? x : {};
   return {
-    image: x.image ?? x.thumb ?? x.src ?? `${CDN}/placeholder.png`,
+    image: x.image ?? x.thumb ?? x.src ?? "/img/placeholder.png",
+
     brand: x.brand ?? x.seller ?? "",
     title: x.title ?? x.name ?? "-",
     color: x.color ?? x.optionColor ?? x.colorLabel ?? "-",
@@ -86,7 +91,8 @@ function normalizeForPayment2(x, i = 0) {
     orderNo: x.orderNo ?? x.orderId ?? x.id ?? `ORDER-${Date.now()}-${i + 1}`,
     id: x.id ?? `${(x.title ?? x.name ?? "item")}-${i}`,
     slug: x.slug ?? undefined,
-    thumb: x.thumb ?? x.image ?? x.src ?? undefined,
+    thumb: x.thumb ?? x.image ?? x.src ?? "/img/placeholder.png",
+
     // ★ 장바구니 원본 key 추적(결제 후 tagPurchased용)
     originalKey: x.sourceKey ?? x.key ?? x.originalKey ?? null,
   };
@@ -104,6 +110,11 @@ export default function Payment2() {
   const location = useLocation();
   const payload = location.state || {};
 
+  /* 세션 */
+  const session = getSession();
+  const uid = session?.username || session?.userid || null;
+
+
   /* ✅ 주문 ID / 구매시각: 컴포넌트 안에서 한 번만 고정 생성 */
   const orderIdRef = React.useRef(payload.orderId || (typeof createOrderId === "function" ? createOrderId() : `ORD-${Date.now()}`));
   const purchasedAtRef = React.useRef(Date.now());
@@ -112,6 +123,7 @@ export default function Payment2() {
 
   /* 아이템/합계 */
   const items = buildLineItems(payload);
+
   const totals = items.reduce(
     (acc, it) => {
       acc.product += toNumber(it.qty, 1) * toNumber(it.unitPrice, 0);
@@ -121,6 +133,10 @@ export default function Payment2() {
     { product: 0, delivery: 0 }
   );
   const grandTotal = totals.product + totals.delivery;
+  const couponAmt = toNumber(payload?.coupon ?? 0, 0);
+  const pointsUsed = toNumber(payload?.pointsUsed ?? 0, 0);
+  const paidTotal = Math.max(0, grandTotal - couponAmt - pointsUsed);
+
 
   /* 주소/연락처 표시 */
   const receiver = payload.receiver || "";
@@ -133,21 +149,33 @@ export default function Payment2() {
   const onOpenLetter = () => navigate("/Event"); // 라우트에 맞게 /event 라면 수정
   const onKeepShopping = () => navigate(-2);
 
-  /* 세션 */
-  const session = getSession();
-  const uid = session?.username || session?.userid || null;
+
+
 
   /* ✅ 포인트 적립 (6%, 중복 방지) */
   React.useEffect(() => {
     if (!items.length) return;
     const creditKey = `pointsCredited:${orderId}`;
     if (sessionStorage.getItem(creditKey) === "1") return;
-    const earn = Math.floor(grandTotal * 0.06);
+    const earn = Math.floor(paidTotal * 0.02);
+
     if (uid && earn > 0) {
       addPoints(uid, earn);
       sessionStorage.setItem(creditKey, "1");
     }
-  }, [uid, items, grandTotal, orderId]);
+  }, [uid, items, paidTotal, orderId]);
+
+  /* ✅ 사용한 적립금 차감 (1회만) */
+  React.useEffect(() => {
+    if (!items.length) return;
+    const flag = `pointsDeducted:${orderId}`;
+    if (sessionStorage.getItem(flag) === "1") return;
+    if (uid && pointsUsed > 0) {
+      spendPoints(uid, pointsUsed);
+    }
+    sessionStorage.setItem(flag, "1");
+  }, [uid, items, pointsUsed, orderId]);
+
 
   /* ✅ 구매 플래그(이벤트 토큰) */
   React.useEffect(() => {
@@ -169,7 +197,8 @@ export default function Payment2() {
     if (keys.length > 0) {
       // 각 항목에 { lastOrderId, purchasedAt } 기록 → MyPage 최근주문 인식
       tagPurchased(keys, orderId, purchasedAt);
-      // removeMany(keys); // 결제 후 카트를 비우고 싶으면 주석 해제
+      removeMany(keys); // 결제 후 카트를 비우고 싶으면 주석 해제
+
     }
     sessionStorage.setItem(flag, "1");
   }, [items, orderId, purchasedAt]);
@@ -200,7 +229,14 @@ export default function Payment2() {
             size: it.size || "-",
             orderNo: it.orderNo || "-",
           })),
-          totals: { product: totals.product, delivery: totals.delivery, grandTotal },
+          totals: {
+            product: totals.product,
+            delivery: totals.delivery,
+            coupon: couponAmt,
+            points: pointsUsed,
+            grandTotal: paidTotal,   // ✅ 최종 결제액
+          },
+
           status: "결제완료",
         });
       }
@@ -224,8 +260,10 @@ export default function Payment2() {
         })),
         subtotal: totals.product,
         shipFee: totals.delivery,
-        coupon: toNumber(payload?.coupon ?? 0, 0),
-        total: grandTotal,
+        coupon: couponAmt,
+        pointsUsed,
+        total: paidTotal,           // ✅ 최종 결제액
+
         receiver,
         address: { zip, addr1: address1, addr2: address2 },
         phone,
@@ -377,6 +415,14 @@ export default function Payment2() {
             </button>
           </div>
         )}
+
+
+      </div>
+
+      <div id="order-total">
+        <div className="order-total-title">최종 결제 금액</div>
+        <div className="order-total-price"> {fmtKRW(paidTotal)}</div>
+
       </div>
 
       {/* 배송정보 요약 */}

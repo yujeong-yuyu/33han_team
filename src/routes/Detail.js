@@ -29,6 +29,7 @@ import { addToCart } from "../utils/cart";
 import { getRewards, LS_REWARDS } from "../utils/rewards";
 import { SESSION_KEY } from "../utils/localStorage";
 
+
 // 📝 로컬 리뷰 유틸 (수정/삭제 포함)
 import {
   getReviewsFor,
@@ -75,6 +76,7 @@ export default function Detail() {
     thumb: "",
   });
 
+
   // ⭐ 별점 상태(작성 폼)
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -86,6 +88,7 @@ export default function Detail() {
   const [uid, setUid] = useState(null);
   const [couponCount, setCouponCount] = useState(0);
   const [points, setPoints] = useState(0);
+
 
   // ✅ 삭제 확인 모달 상태
   const [confirmState, setConfirmState] = useState({
@@ -122,6 +125,7 @@ export default function Detail() {
     const list = Array.isArray(catalog)
       ? catalog
       : catalog?.items
+
       ? catalog.items
       : catalog && typeof catalog === "object"
       ? Object.values(catalog)
@@ -171,6 +175,7 @@ export default function Detail() {
     [targets]
   );
 
+
   // 구매바/푸터 보정
   const recalcBuybar = useCallback(() => {
     const buy = buybarRef.current;
@@ -204,6 +209,7 @@ export default function Detail() {
     const r1 = requestAnimationFrame(recalcBuybar);
     const r2 = requestAnimationFrame(recalcBuybar);
     return () => {
+
     cancelAnimationFrame(r1);
     cancelAnimationFrame(r2);
     };
@@ -216,6 +222,7 @@ export default function Detail() {
     return () => ro.disconnect();
   }, [recalcBuybar]);
 
+
   // ESC로 닫기(사이드/리뷰/장바구니모달/수정모달/확인모달)
   useEffect(() => {
     const onKey = (e) => {
@@ -223,6 +230,7 @@ export default function Detail() {
         setNavOpen(false);
         setReviewModal((prev) => ({ ...prev, open: false }));
         setShowModal(false);
+
         setEditState((s) => ({ ...s, open: false }));
         setConfirmState((s) => ({ ...s, open: false, onConfirm: null })); // ← 추가
       }
@@ -350,6 +358,7 @@ export default function Detail() {
     setShowModal(true);
   }, [active?.id, active?.slug, basePrice, gallery, key, product?.id, product?.name, product?.slug, qty]);
 
+
   // ✅ BUY NOW → Payment로 이동
   const handleBuyNow = useCallback(() => {
     const lineItem = {
@@ -359,10 +368,12 @@ export default function Detail() {
       unitPrice: basePrice,
       qty,
       delivery: 0,
+
       thumb: gallery?.[0] ?? product?.image ?? "",
       brand: product?.brand ?? "",
       optionLabel: "기본 구성",
     };
+
 
   navigate("/payment", {
       state: {
@@ -381,6 +392,7 @@ export default function Detail() {
       navigate(-1);
     }
   }, [active, navigate]);
+
 
   // ================================
   //         리뷰 작성/표시/수정/삭제
@@ -784,6 +796,7 @@ export default function Detail() {
             <div className="detail-inpo detail-review" id="review" ref={reviewRef}>
               <h3 className="detail-info-title">리뷰</h3>
 
+
               {/* 리뷰 작성 폼 */}
               <form
                 className="rv-form"
@@ -831,6 +844,7 @@ export default function Detail() {
                   </div>
 
                   <label className="rv-photo-btn">
+
                     <input type="file" accept="image/*" hidden onChange={onPickPhoto} />
                     <span>사진첨부하기</span>
                   </label>
@@ -1038,6 +1052,7 @@ export default function Detail() {
         </div>
       </main>
 
+
       {/* 리뷰 읽기 모달 */}
       <aside
         id="rv-modal"
@@ -1071,6 +1086,7 @@ export default function Detail() {
           <p className="rvm-text">{reviewModal.text}</p>
         </div>
       </aside>
+
 
       {/* 리뷰 수정 모달 (본인 리뷰만) */}
         <aside
