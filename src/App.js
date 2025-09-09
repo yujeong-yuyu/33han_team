@@ -10,6 +10,7 @@ import PageFade from "./components/PageFade";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Chatbot from "./components/Chatbot";
+import AdminSetup from "./routes/AdminSetup";
 
 import MainPage from "./routes/MainPage";
 import LifeStyle from "./routes/LifeStyle";
@@ -111,6 +112,7 @@ export default function App() {
             <Route path="login" element={<Login />} />
             <Route path="favorites" element={<Favorites />} />
             <Route path="best" element={<Best />} />
+            <Route path="/admin-setup" element={<AdminSetup />} />
           </Route>
 
           {/* 헤더 없음(페이드 X): Detail 보호 */}

@@ -388,33 +388,42 @@ const MyPage = () => {
                   );
                 })}
               </div>
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 16 }}>
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                style={{ background: "transparent", border: "none", cursor: page > 1 ? "pointer" : "default", color: page > 1 ? "#333" : "#bbb", fontSize: 18 }}
-                aria-label="이전 페이지"
-                title="이전"
-              >
-                &lt;
-              </button>
+              <div style={{
+                 display: "flex", 
+                 justifyContent: "center", 
+                 alignItems: "center", 
+                 gap: 16, 
+                 marginTop: 16,
+                 position: "absolute",
+                 left: 0,
+                 bottom: 0
+                 }}>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  style={{ background: "transparent", border: "none", cursor: page > 1 ? "pointer" : "default", color: page > 1 ? "#333" : "#bbb", fontSize: 18 }}
+                  aria-label="이전 페이지"
+                  title="이전"
+                >
+                  &lt;
+                </button>
 
-              <span style={{ minWidth: 80, textAlign: "center", fontSize: 14 }}>
-                {page} / {totalPages}
-              </span>
+                <span style={{ minWidth: 80, textAlign: "center", fontSize: 14 }}>
+                  {page} / {totalPages}
+                </span>
 
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                style={{ background: "transparent", border: "none", cursor: page < totalPages ? "pointer" : "default", color: page < totalPages ? "#333" : "#bbb", fontSize: 18 }}
-                aria-label="다음 페이지"
-                title="다음"
-              >
-                &gt;
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  style={{ background: "transparent", border: "none", cursor: page < totalPages ? "pointer" : "default", color: page < totalPages ? "#333" : "#bbb", fontSize: 18 }}
+                  aria-label="다음 페이지"
+                  title="다음"
+                >
+                  &gt;
+                </button>
+              </div>
             </div>
           </section>
         </main>

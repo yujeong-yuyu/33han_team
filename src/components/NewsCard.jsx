@@ -1,77 +1,100 @@
-// components/NewsCard.jsx
+// src/components/NewsCard.jsx
 import React from "react";
-import "./NewsCard.css";
 
 export default function NewsCard({
   img,
-  source = "",
-  time = "",
-  title = "제목",
-  /** 슬라이드 제어(옵션) */
+  source,
+  time,
+  title,
+  subtitle = "",
+  index = 0,
+  total = 1,
   onPrev,
   onNext,
-  /** 도트 */
-  index = 1,
-  total = 5,
 }) {
-  const dots = Array.from({ length: total }, (_, i) => i);
+  const sub = (subtitle || "").trim();
+  const canNavigate = total > 1;
 
   return (
-    <article className="news-card" style={{ ["--img"]: `url(${img})` }}>
-      {/* 좌우 내비 */}
-      <button className="nav prev" aria-label="이전" onClick={onPrev}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </button>
-      <button className="nav next" aria-label="다음" onClick={onNext}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-          <path d="M9 6l6 6-6 6" />
-        </svg>
-      </button>
+    <div
+      className="newsCard-min"
+      style={{ display: "flex", alignItems: "center", gap: 16 }}
+    >
+      {/* 이미지 엘리먼트로 렌더 */}
+      <img
+        className="news-card-img"
+        src={img}
+        alt={title || "news"}
+        loading="lazy"
+        style={{ width: 620, height: 311, objectFit: "cover", borderRadius: 10 }}
+      />
 
-      {/* 매체/시간 */}
-      <div className="news-meta">
-        <span className="logo" aria-hidden="true" />
-        <span>{source}</span>
-        <span className="sep">·</span>
-        <span>{time}</span>
+      {/* 텍스트 영역 */}
+      <div className="newsText" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {/* 매체/시간 */}
+        {(source || time) && (
+          <div className="news-meta" style={{ fontSize: 12, opacity: 0.7 }}>
+            {source && <span>{source}</span>}
+            {source && time && <span style={{ margin: "0 6px" }}>·</span>}
+            {time && <span>{time}</span>}
+          </div>
+        )}
+
+        {/* 제목 */}
+        <h3 className="news-title" style={{ fontSize: "1.1rem", fontWeight: 600, lineHeight: 1.35, margin: 0, color: "#5E472F" }}>
+          {title || ""}
+        </h3>
+
+        {/* 서브멘트: 150px에서 말줄임 */}
+        <p
+          className="news-sub"
+          title={sub}
+          style={{
+            width: 150,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            fontSize: 13,
+            lineHeight: 1.3,
+            color: "#5E472F",
+            opacity: 0.8,
+            margin: 0,
+          }}
+        >
+          {sub}
+        </p>
+
+        {/* 좌우 네비 + 인덱스 */}
+        {canNavigate && (
+          <div className="newsNav" style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8 }}>
+            {onPrev && (
+              <button
+                type="button"
+                className="nav prev"
+                aria-label="이전"
+                onClick={onPrev}
+                style={{ background: "transparent", border: "1px solid #C2C4B6", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}
+              >
+                ‹
+              </button>
+            )}
+            {onNext && (
+              <button
+                type="button"
+                className="nav next"
+                aria-label="다음"
+                onClick={onNext}
+                style={{ background: "transparent", border: "1px solid #C2C4B6", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}
+              >
+                ›
+              </button>
+            )}
+            <span style={{ fontSize: 12, opacity: 0.6 }}>
+              {String(index + 1).padStart(2, "0")}/{String(total).padStart(2, "0")}
+            </span>
+          </div>
+        )}
       </div>
-
-      {/* 제목 */}
-      <h3 className="news-title">{title}</h3>
-
-      {/* 도트 */}
-      <div className="dots" aria-hidden="true">
-        {dots.map((d) => (
-          <span key={d} className={`dot ${d === index ? "active" : ""}`} />
-        ))}
-      </div>
-
-      {/* 좌하단 액션 */}
-     {/*  <div className="news-actions">
-        <button className="btn" type="button" aria-label={`좋아요 ${likes}개`}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-            <path d="M7 22h-2a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h2m5-5l1 4h7a2 2 0 0 1 2 2v1.5a2 2 0 0 1-.4 1.2l-4.2 5.6a2 2 0 0 1-1.6.7h-7V7a3 3 0 0 1 3-3z" />
-          </svg>
-          <span>{likes}</span>
-        </button>
-        <button className="btn" type="button" aria-label={`댓글 ${comments}개`}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-            <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V5a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
-          </svg>
-          <span>{comments}</span>
-        </button>
-        <button className="btn" type="button" aria-label={isSaved ? "저장됨" : "저장"}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-          </svg>
-        </button>
-      </div> */}
-
-      
-      {/* 접근성용 */}
-      <span className="sr-only">뉴스 카드</span>
-    </article>
+    </div>
   );
 }

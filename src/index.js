@@ -13,6 +13,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <FavProvider>
       <BrowserRouter>
         <App />
+        
       </BrowserRouter>
     </FavProvider>
   </AuthProvider>
