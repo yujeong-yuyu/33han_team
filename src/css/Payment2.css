@@ -1,3 +1,4 @@
+
 /* 진행바 */
 #payment-progress {
     width: 1440px;
@@ -15,8 +16,8 @@
     margin-top: 10px;
 }
 
-.circle,
-.circle2 {
+
+.circle, .circle2 {
     width: 40px;
     height: 40px;
     border-radius: 25px;
@@ -24,32 +25,23 @@
     margin: 30px 60px 10px 60px;
 }
 
-.circle {
-    background-color: #fff7e4;
-}
 
-.circle2 {
-    background-color: #06301a;
-}
+.circle { background-color: #fff7e4; }
+.circle2 { background-color: #06301a; }
 
-.circle2 p {
-    color: #fff7e4;
-}
+.circle2 p { color: #fff7e4; }
 
-.circle p,
-.circle2 p {
+.circle p, .circle2 p {
     text-align: center;
     margin-top: 10px;
 }
 
-.progress-nav,
-.progress-nav2 {
+
+.progress-nav, .progress-nav2 {
     text-align: center;
 }
 
-.progress-nav2 {
-    text-decoration: underline;
-}
+.progress-nav2 { text-decoration: underline; }
 
 /* 전체 랩 */
 #cart-wrap {
@@ -108,25 +100,14 @@
     font-size: 30px;
 }
 
-.payment-final-button1 {
-    background-color: #5e472f;
-}
 
-.payment-final-button1:hover {
-    background-color: #795d40;
-}
+.payment-final-button1 { background-color: #5e472f; }
+.payment-final-button1:hover { background-color: #795d40; }
 
-.payment-final-button2 {
-    background-color: #06301A;
-}
+.payment-final-button2 { background-color: #06301A; }
+.payment-final-button2:hover { background-color: #0d522e; }
 
-.payment-final-button2:hover {
-    background-color: #0d522e;
-}
-
-.payment-final-button2 img {
-    width: 60px;
-}
+.payment-final-button2 img { width: 60px; }
 
 /* 주문 상품 제목 */
 #cart-title {
@@ -153,14 +134,12 @@
     justify-content: space-between;
 }
 
-#cart-item ul li:nth-child(2) {
+#cart-item ul li:nth-child(2){
     margin-left: 600px;
 }
-
-#cart-item ul li:nth-child(3) {
+#cart-item ul li:nth-child(3){
     margin-right: 300px;
 }
-
 #cart-item ul li p {
     margin-top: 40px;
     font-size: 1.4rem;
@@ -205,27 +184,21 @@
     border-bottom: 1px solid #5e472f;
 }
 
-.cart-item-title,
-.cart-item-color,
-.cart-item-size,
-.cart-item-price,
-.cart-item-serialnumber {
+
+.cart-item-title, .cart-item-color, .cart-item-size, .cart-item-price, .cart-item-serialnumber {
     margin: 5px 0;
     font-size: 20px;
     font-weight: bold;
 }
 
-.payment2-delivery-price {
+.payment2-delivery-price{
     margin-left: 145px;
     padding-top: 30px;
 }
-
-.payment2-order-status {
+.payment2-order-status{
     margin-left: 45px;
 }
-
-.payment2-delivery-price,
-.payment2-order-status {
+.payment2-delivery-price, .payment2-order-status {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -234,18 +207,6 @@
     gap: 5px;
 }
 
-#order-total {
-    padding: 0 20px;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    font-size: 1.2rem;
-
-}
-
-.order-total-title {}
-
-.order-total-price {}
 
 /* 카트 푸터 */
 #cart-footer2 {
@@ -270,8 +231,8 @@
     font-weight: bold;
 }
 
-.cart-total-payment4,
-.cart-total-personal {
+
+.cart-total-payment4, .cart-total-personal {
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -280,35 +241,28 @@
     color: #91704c;
 }
 
-.cart-total-payment4 ul {
+.cart-total-payment4 ul{
     margin-top: 35px;
 }
-
-.cart-total-payment4 ul li {
+.cart-total-payment4 ul li{
     margin-bottom: 40px;
 }
-
-.cart-total-payment4 ul li:nth-child(2) {
+.cart-total-payment4 ul li:nth-child(2){
     margin-bottom: 140px;
 }
-
-.cart-total-personal ul {
+.cart-total-personal ul{
     list-style: none;
     margin-top: -390px;
 }
-
-.cart-total-personal ul li {
+.cart-total-personal ul li{
     margin-bottom: 40px;
 }
-
-.cart-total-personal ul li p:nth-child(2) {
+.cart-total-personal ul li p:nth-child(2){
     margin-top: 20px;
 }
-
-.cart-total-personal ul li p:nth-child(3) {
+.cart-total-personal ul li p:nth-child(3){
     margin-top: 20px;
 }
-
 .cart-total-personal {
     margin-left: 300px;
 }

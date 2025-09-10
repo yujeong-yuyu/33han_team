@@ -4,11 +4,49 @@ import { useAuth } from "../context/AuthContext";
 
 import SignupModal from "../components/SignupModal";
 import SocialLogin from "../components/SocialLogin";
+import { anyAdminExists } from "../utils/userStore"; 
 
 import '../css/login.css';
 
 export default function Login() {
   const navigate = useNavigate();
+
+
+
+  const { loginLocal, logout } = useAuth();
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [aID, setAID] = useState("");
+  const [aPw, setAPw] = useState("");
+  const [aErr, setAErr] = useState("");
+  const openAdminLogin = () => {
+  if (!anyAdminExists()) {
+    const go = window.confirm("등록된 관리자가 없습니다. 관리자 생성 페이지로 이동할까요?");
+    if (go) navigate("/admin-setup"); // 앞서 만든 AdminSetup 라우트
+    return;
+  }
+  setAdminOpen(true);
+};
+
+  const doAdminLogin = async (e) => {
+    e.preventDefault();
+    setAErr("");
+    try {
+      const u = await loginLocal(aID.trim(), aPw);
+      if (u.role !== "admin") {
+        await logout("local");
+        throw new Error("관리자 권한이 없습니다.");
+      }
+      setAdminOpen(false);
+      setAID(""); setAPw("");
+      // 필요하면 관리페이지로 이동
+      // navigate("/admin");
+      alert("관리자 로그인 완료!");
+    } catch (err) {
+      setAErr(err.message || "로그인 실패");
+    }
+  };
+
+
 
   const { login, setNaverInstance } = useAuth();
 
@@ -100,6 +138,10 @@ export default function Login() {
 
             <div className="sub-links">
 
+              <button type="button" className="link-btn" onClick={openAdminLogin}>
+                관리자로그인
+              </button>
+
               <button type="button" className="link-btn" onClick={() => alert("비밀번호 찾기 페이지로 이동")}>
                 비밀번호찾기
               </button>
@@ -115,8 +157,44 @@ export default function Login() {
 
           {/* 회원가입 모달 */}
           {showSignup && <SignupModal onClose={() => setShowSignup(false)} />}
+
+          {/* 관리자로그인 모달 */}
+          {adminOpen && (
+            <div className="modal-backdrop" onClick={() => setAdminOpen(false)}>
+              <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+                <h3>관리자 로그인</h3>
+                <form onSubmit={doAdminLogin} className="modal-form">
+                  <input
+                    type="ID"
+                    placeholder="관리자 이메일"
+                    value={aID}
+                    onChange={(e) => setAID(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="password"
+                    placeholder="비밀번호"
+                    value={aPw}
+                    onChange={(e) => setAPw(e.target.value)}
+                    required
+                  />
+                  {aErr && <p className="modal-error">{aErr}</p>}
+                  <div className="modal-actions">
+                    <button type="button" onClick={() => setAdminOpen(false)}>취소</button>
+                    <button type="submit">로그인</button>
+                  </div>
+                </form>
+                <div className="modal-sub">
+                  <button type="button" onClick={() => navigate("/admin-setup")}>
+                    관리자 생성 / 승격하기
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
+      
     </>
   );
 }

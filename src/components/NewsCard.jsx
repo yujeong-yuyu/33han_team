@@ -51,30 +51,6 @@ export default function NewsCard({
         ))}
       </div>
 
-      {/* 좌하단 액션 */}
-      <div className="news-actions">
-        <button className="btn" type="button" aria-label={`좋아요 ${likes}개`}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-            <path d="M7 22h-2a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h2m5-5l1 4h7a2 2 0 0 1 2 2v1.5a2 2 0 0 1-.4 1.2l-4.2 5.6a2 2 0 0 1-1.6.7h-7V7a3 3 0 0 1 3-3z" />
-          </svg>
-          <span>{likes}</span>
-        </button>
-        <button className="btn" type="button" aria-label={`댓글 ${comments}개`}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-            <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V5a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
-          </svg>
-          <span>{comments}</span>
-        </button>
-        <button className="btn" type="button" aria-label={isSaved ? "저장됨" : "저장"}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-          </svg>
-        </button>
-      </div>
-
-      {/* 우하단 배지 */}
-      <span className="badge-hot">인기</span>
-
       {/* 접근성용 */}
       <span className="sr-only">뉴스 카드</span>
     </article>
