@@ -35,7 +35,7 @@ import Best from "./routes/Best";
    ========================= */
 function SplashOverlay({
   text = "Souvenir",
-  stext = "행복을 선물하는 소품샵",
+  stext = "추억을 선물하는 소품샵",
   videoSrc = "/videos/intro.mp4",
   poster = "",
   duration = 2500, // ms

@@ -967,7 +967,6 @@ export default function Detail() {
                           <p className="rv-name">{rv.name}</p>
                           <p className="rv-starline">
                             <span className="rv-stars-static">{rv.stars}</span>
-                            <span className="rv-score">{rv.score}</span>
                           </p>
                         </div>
                         {(canDelete || isOwner) && (

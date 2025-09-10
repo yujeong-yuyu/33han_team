@@ -341,8 +341,11 @@
   background-color: #fcfcfc;
   cursor: pointer;
 }
-#pay .btn1{
-    padding-top: 10px;
+
+
+#pay .btn1 {
+  padding-top: 10px;
+
 }
 
 #pay button:hover {
@@ -483,6 +486,7 @@
   padding: 10px;
 }
 
+
 #payment5 {
   margin-top: 20px;
 }
@@ -525,4 +529,75 @@
 #payment-wrap button p {
   font-size: 1.7rem;
   color: white;
+
+}
+
+
+
+/* 쿠폰 사용 , 적립금 사용 */
+#payment2-coupon {
+  display: flex;
+  height: 40px;
+  justify-content: space-between;
+  gap: 8;
+  align-items: center;
+  padding: 0 0 0 10px;
+  margin-bottom: 25px;
+}
+
+.payment2-coupon-title {}
+
+.payment2-coupon-sel {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+
+}
+
+.payment2-coupon-sel select {
+  min-Width: 220px;
+  background-color: #fff;
+  border: 0.5px solid #999;
+  padding: 5px;
+}
+
+.pay2-button {
+  border-radius: 10px;
+  color: #fff;
+  font-family: "NanumSquareRound", serif;
+  padding: 0 5px;
+
+}
+
+/* 적립금 */
+#payment4-pts {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  height: 70px;
+  padding: 0 0 0 10px;
+
+}
+
+.payment4-input {
+  display: flex;
+  align-Items: center;
+  gap: 8px;
+}
+
+.payment4-input input {
+  width: 100px;
+  text-Align: right;
+  font-size: 0.95rem;
+
+}
+
+.pay4-button {
+  border-radius: 10px;
+  color: #fff;
+  font-family: "NanumSquareRound", serif;
+  padding: 0 5px;
+
+
 }

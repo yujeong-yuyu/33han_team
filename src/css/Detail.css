@@ -286,8 +286,8 @@
 }
 
 .detail-warp1 .rv-avatar {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: #FFF;
     border: 1px solid #5e472f7e;
@@ -408,6 +408,8 @@
 
 .detail-warp1 .rv-name {
     font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 7px;
 }
 
 .detail-warp1 .rv-starline {
@@ -415,7 +417,7 @@
     align-items: center;
     gap: 6px;
     color: #7b6a4b;
-    font-size: 13px;
+    font-size: 14px;
     margin-top: 2px;
 }
 

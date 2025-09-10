@@ -1,3 +1,4 @@
+
 // src/pages/Payment.jsx
 import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -11,6 +12,7 @@ import "../css/Payment.css";
 export default function Payment() {
   const navigate = useNavigate();
   const location = useLocation();
+
   const session = getSession?.();
   const uid = session?.username || session?.userid || null;
   const [couponOptions, setCouponOptions] = useState([]);
@@ -26,13 +28,12 @@ export default function Payment() {
   }, [uid]);
 
 
-
   // ---- 원본 아이템 안전 수령: lineItems | items | 단일 객체도 배열화 ----
   const incoming =
     location.state?.lineItems ?? location.state?.items ?? [];
-  const rawLineItems = Array.isArray(incoming) ? incoming : [incoming];
+  const rawLineItems = location.state?.lineItems || []; // Cart에서 넘어온 원본
 
-  /* ---------------------- helpers ---------------------- */
+
   const toInt = (v, fallback = 0) => {
     const n = Number(String(v ?? "").replace(/[^\d.-]/g, ""));
     return Number.isFinite(n) ? n : fallback;
@@ -60,13 +61,14 @@ export default function Payment() {
     image: it.thumb ?? it.image ?? it.src ?? null,
     brand: it.brand ?? "",
     optionLabel: it.optionLabel ?? it.optionName ?? "",
+
     color: it.color ?? it.optionColor ?? null,
     size: it.size ?? it.optionSize ?? null,
     orderNo: it.orderNo ?? it.orderId ?? it.id ?? null,
     id: it.id ?? it.slug ?? null,
   });
 
-  /* ---------------------- 금액/표시값 계산 ---------------------- */
+
   const {
     items,
     subtotal,
@@ -76,12 +78,15 @@ export default function Payment() {
     firstName,
     extraCount,
   } = useMemo(() => {
+
     const items = Array.isArray(rawLineItems)
       ? rawLineItems.map(normItem)
       : [];
 
+
     const subtotal = items.reduce((s, it) => s + it.unitPrice * it.qty, 0);
     const shipFee = items.reduce((s, it) => s + it.delivery, 0);
+
 
     // 선택한 쿠폰 금액 산정 (amount 우선, 없으면 percent/rate로 계산)
     const chosen = couponOptions.find(c => c.id === selectedCouponId) || null;
@@ -93,6 +98,7 @@ export default function Payment() {
     );
 
     const total = Math.max(0, subtotal + shipFee - couponAmt);
+
 
     // "상품명 (외 N개)" 표기
     const firstName = items[0]?.name ?? "";
@@ -127,7 +133,7 @@ export default function Payment() {
       firstName,
       extraCount,
     };
-  }, [rawLineItems, location.state?.coupon]);
+  }, [rawLineItems, couponOptions, selectedCouponId]);
 
   /* --------- 적립금 사용 --------- */
   const availablePoints = useMemo(
@@ -139,6 +145,11 @@ export default function Payment() {
     () => Math.max(0, Math.min(availablePoints, total)),
     [availablePoints, total]
   );
+  // 쿠폰/합계가 바뀌면 현재 입력된 포인트를 상한에 맞게 자동 보정
+  useEffect(() => {
+    setPointsToUse(p => Math.min(p, Math.max(0, maxUseable)));
+  }, [maxUseable]);
+
   const onChangePoints = (v) => {
     const n = Number(String(v ?? "").replace(/[^\d.-]/g, "")) || 0;
     setPointsToUse(Math.min(Math.max(0, n), maxUseable));
@@ -148,8 +159,8 @@ export default function Payment() {
     [total, pointsToUse]
   );
 
-
   /* ---------------------- 폼 상태 ---------------------- */
+
   const [buyer, setBuyer] = useState("");
   const [receiver, setReceiver] = useState("");
   const [zip, setZip] = useState("");
@@ -171,7 +182,9 @@ export default function Payment() {
     { value: "pickup", label: "직접수령" },
   ];
 
+
   /* ---------------------- 제출 ---------------------- */
+
   const onSubmit = (e) => {
     e.preventDefault();
     if (!buyer || !receiver || !zip || !addr1 || !phone2 || !phone3 || !payMethod) {
@@ -186,11 +199,19 @@ export default function Payment() {
       phone: `${phone1}-${phone2}-${phone3}`,
       deliveryNote,
       payMethod,
+
       // ✅ 정규화된 아이템을 그대로 전달(다음 단계에서 바로 사용 가능)
       lineItems: items,
       subtotal,
       shipFee,
-      coupon: couponAmt,
+      coupon: selectedCouponId
+        ? {
+          id: selectedCouponId,
+          amount: couponAmt,
+          title:
+            couponOptions.find(c => c.id === selectedCouponId)?.title || "쿠폰",
+        }
+        : 0,
       total: payTotal,
       pointsUsed: Math.min(pointsToUse || 0, maxUseable),
 
@@ -199,7 +220,9 @@ export default function Payment() {
     navigate("/payment2", { state: payload });
   };
 
+
   /* ---------------------- Render ---------------------- */
+
   return (
     <form onSubmit={onSubmit}>
       {/* 진행바 */}
@@ -287,12 +310,33 @@ export default function Payment() {
                   <button
                     type="button"
                     onClick={() => {
-                      // TODO: 다음(카카오) 우편번호 API 연동
-                      alert("우편번호 검색 모듈을 연결하세요.");
+
+                      const element = document.getElementById("postcode-container");
+                      if (!element) return;
+
+                      // 팝업 대신 레이어로 보여주기
+                      new window.daum.Postcode({
+                        popup: false, // 레이어 모드
+                        width: 500,
+                        height: 400,
+                        oncomplete: function (data) {
+                          setZip(data.zonecode);
+                          setAddr1(data.address + (data.buildingName ? ` (${data.buildingName})` : ""));
+                          setAddr2(""); // 상세주소는 비워두고 사용자 입력
+                          element.style.display = "none"; // 선택 후 레이어 숨기기
+                        },
+                        onclose: function () {
+                          element.style.display = "none"; // 닫기 버튼 클릭 시 레이어 숨기기
+                        },
+                      }).embed(element);
+
+                      element.style.display = "block"; // 레이어 보이기
+
                     }}
                   >
                     우편번호 검색
                   </button>
+
                 </div>
               </div>
 
@@ -311,6 +355,46 @@ export default function Payment() {
                 />
               </div>
             </li>
+
+            {/* -------------------- 레이어 컨테이너 -------------------- */}
+            <div
+              id="postcode-container"
+              style={{
+                display: "none",
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1000,
+                border: "1px solid #ccc",
+                width: "500px",
+                height: "450px", // 높이 조금 늘려서 버튼 공간 확보
+                backgroundColor: "#fff",
+                paddingTop: "40px", // 버튼 공간 확보
+              }}
+            >
+              {/* 닫기 버튼 */}
+              <button
+                type="button"
+                style={{
+                  position: "absolute",
+                  top: "5px",
+                  right: "5px",
+                  padding: "5px 10px",
+                  cursor: "pointer",
+                  zIndex: 1001,
+                  fontSize: "17px",
+                }}
+                onClick={() => {
+                  const element = document.getElementById("postcode-container");
+                  element.style.display = "none";
+                }}
+              >
+                ✕ 닫기
+              </button>
+            </div>
+
+
 
             <li className="phone">
               <label>연락처</label>
@@ -490,36 +574,61 @@ export default function Payment() {
                 </div>
               </li>
 
+              {/* 쿠폰 선택 */}
+              <li>
+                <div id="payment2-coupon">
+                  <p className="payment2-coupon-title">쿠폰</p>
+                  <div className="payment2-coupon-sel">
+                    <select
+                      value={selectedCouponId || ""}
+                      onChange={(e) => setSelectedCouponId(e.target.value || null)}
+                    >
+                      <option value="">선택 안함</option>
+                      {couponOptions.map(c => (
+                        <option key={c.id} value={c.id}>
+                          {(c.title || "쿠폰")} · {c.percent ?? Math.round((c.rate || 0) * 100) ?? 0}% · -
+                          {new Intl.NumberFormat("ko-KR").format(Number(c.amount || 0))}원
+                        </option>
+                      ))}
+                    </select>
+                    {selectedCouponId && (
+                      <button className="pay2-button" type="button" onClick={() => setSelectedCouponId(null)}>적용 취소</button>
+                    )}
+                  </div>
+                </div>
+              </li>
+
+
               <li>
                 <div id="payment4">
                   <p>쿠폰 할인 금액</p>
                   <p>{fmt(couponAmt)}</p>
                 </div>
               </li>
+
               {/* ✅ 적립금 사용 */}
               <li>
-                <div id="payment4-pts" style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
+                <div id="payment4-pts" >
                   <p>적립금 사용</p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div className="payment4-input" >
                     <input
                       type="text"
                       inputMode="numeric"
                       value={pointsToUse}
                       onChange={(e) => onChangePoints(e.target.value)}
-                      style={{ width: 100, textAlign: "right" }}
                     />
-                    <button type="button" onClick={() => setPointsToUse(maxUseable)}>전액사용</button>
+                    <button className="pay4-button" type="button" onClick={() => setPointsToUse(maxUseable)}>전액사용</button>
                     <span style={{ color: "#666", fontSize: 12 }}>보유 {fmt(availablePoints)}</span>
                   </div>
                 </div>
               </li>
-
 
               <div className="title-underline"></div>
 
               <li>
                 <div id="payment5">
                   <p>총 결제 금액</p>
+
                   <p>{fmt(payTotal)}</p>
 
                 </div>
@@ -547,6 +656,7 @@ export default function Payment() {
           </div>
         </div>
       </div>
-    </form>
+
+    </form >
   );
 }

@@ -288,18 +288,19 @@ export default function Community() {
 
   // 2) 키워드 (너무 많으면 500자 넘으니 청크로 분할)
   const KEYWORDS = [
-    "가구","원목 가구","라탄 가구","모듈 가구","빈티지 가구","북유럽 가구",
-    "인테리어","홈스타일링","집꾸미기","셀프 인테리어","원룸 인테리어",
-    "거실 인테리어","침실 인테리어","주방 인테리어","현관 인테리어",
-    "소품","인테리어 소품","테이블 데코","선반 꾸미기","오브제",
-    "화병","캔들 홀더","트레이","러그","쿠션","담요","액자","포스터",
-    "플랜테리어","실내 식물","화분","인센스 홀더",
-    "예쁜 집","감성 인테리어","따뜻한 집","하우스 투어","홈투어",
-    "홈카페","무드등 인테리어","색감 인테리어","내추럴 인테리어","미니멀 인테리어",
-    "\"interior design\"","\"home decor\"","\"living room decor\"","\"bedroom decor\"",
-    "\"kitchen decor\"","\"shelf styling\"","\"coffee table decor\"",
-    "\"ceramic vase\"","\"candle holder\"","\"decor tray\"","\"trinket dish\"",
-    "\"planter\"","\"indoor plants\"","\"cozy home\"","\"minimalist decor\"","\"vintage decor\""
+    "Kelly Wearstler", "Ilse Crawford", "Patricia Urquiola", "India Mahdavi",
+    "Philippe Starck", "Pierre Yovanovitch", "Jean-Louis Deniot",
+    "Axel Vervoordt", "Vincent Van Duysen", "John Pawson",
+    "Faye Toogood", "Peter Marino", "Joseph Dirand",
+    "Nate Berkus", "Jeremiah Brent", "Sarah Sherman Samuel",
+    "Roman and Williams", "Dimore Studio", "Studio KO", "Studio Peregalli",
+    "Yabu Pushelberg", "Rockwell Group", "Clodagh",
+    "Vitra", "Knoll", "Herman Miller", "Cassina", "B&B Italia", "Minotti", "Poliform",
+    "Flos", "Artemide", "Louis Poulsen", "FLOS", "Gubi", "Kartell",
+    "Hay", "Muuto", "Menu", "Ferm Living", "andTradition", "Artek",
+    "mid-century modern", "scandinavian interior", "japandi", "minimalist interior",
+    "minimalist home", "modern interior", "living room ideas", "brutalist interior",
+    "interior design", "wellness interior"
   ];
 
   // q 길이가 500자를 넘지 않도록 키워드 묶음으로 나누기
