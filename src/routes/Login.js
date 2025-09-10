@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 
 import SignupModal from "../components/SignupModal";
 import SocialLogin from "../components/SocialLogin";
@@ -38,8 +39,7 @@ export default function Login() {
       }
       setAdminOpen(false);
       setAID(""); setAPw("");
-      // 필요하면 관리페이지로 이동
-      // navigate("/admin");
+      navigate("/");
       alert("관리자 로그인 완료!");
     } catch (err) {
       setAErr(err.message || "로그인 실패");
@@ -162,7 +162,7 @@ export default function Login() {
           {adminOpen && (
             <div className="modal-backdrop" onClick={() => setAdminOpen(false)}>
               <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
-                <h3>관리자 로그인</h3>
+                <h3 style={{ fontFamily: "NanumSquareRound" }}>관리자 로그인</h3>
                 <form onSubmit={doAdminLogin} className="modal-form">
                   <input
                     type="ID"
@@ -180,12 +180,18 @@ export default function Login() {
                   />
                   {aErr && <p className="modal-error">{aErr}</p>}
                   <div className="modal-actions">
-                    <button type="button" onClick={() => setAdminOpen(false)}>취소</button>
-                    <button type="submit">로그인</button>
+                    <button 
+                    type="button" 
+                    onClick={() => setAdminOpen(false)}
+                    style={{ fontFamily: "NanumSquareRound" }}
+                    >
+                      취소
+                      </button>
+                    <button type="submit" style={{ fontFamily: "NanumSquareRound" }}>로그인</button>
                   </div>
                 </form>
                 <div className="modal-sub">
-                  <button type="button" onClick={() => navigate("/admin-setup")}>
+                  <button type="button" onClick={() => navigate("/admin-setup")}  style={{ fontFamily: "NanumSquareRound" }}>
                     관리자 생성 / 승격하기
                   </button>
                 </div>

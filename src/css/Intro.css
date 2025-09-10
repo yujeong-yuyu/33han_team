@@ -2,7 +2,7 @@
 .splash {
     position: fixed;
     inset: 0;
-    z-index: 9999;
+    z-index: 8888;
     background: #000;
     /* 비디오 로딩 전 배경 */
     display: grid;
@@ -31,7 +31,7 @@
 
 .splash__center {
     position: relative;
-    z-index: 1;
+    z-index: 9999;
     /* 비디오 위에 텍스트 */
     display: grid;
     place-items: center;
@@ -40,9 +40,10 @@
 }
 
 .splash__text {
-    font-size: 2rem;
+    font-size: 5rem;
     color: #ffffff;
     line-height: 1.2;
     letter-spacing: 2px;
     font-family: "Playfair Display", serif;
+    text-shadow: 1px 3px 2px #bbb;
 }

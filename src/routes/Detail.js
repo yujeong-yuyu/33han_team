@@ -29,7 +29,6 @@ import { addToCart } from "../utils/cart";
 import { getRewards, LS_REWARDS } from "../utils/rewards";
 import { SESSION_KEY } from "../utils/localStorage";
 
-
 // 📝 로컬 리뷰 유틸 (수정/삭제 포함)
 import {
   getReviewsFor,
@@ -41,13 +40,26 @@ import {
 
 export default function Detail() {
   // ---------- Auth ----------
-  const { isLoggedIn, logoutAll, user } = useAuth();
+  const { isLoggedIn, logoutAll, user, isAdmin: isAdminFn } = useAuth();
   const navigate = useNavigate();
   const handleLogout = async () => {
     await logoutAll();
     navigate("/", { replace: true });
   };
   const isAuthed = !!isLoggedIn?.local;
+
+  // ✅ 관리자 여부
+  const isAdmin = useMemo(() => {
+    try {
+      if (typeof isAdminFn === "function") return !!isAdminFn();
+    } catch {}
+    return !!(
+      user?.role === "admin" ||
+      user?.isAdmin === true ||
+      isLoggedIn?.role === "admin" ||
+      isLoggedIn?.admin === true
+    );
+  }, [isAdminFn, user, isLoggedIn]);
 
   // ---------- Refs ----------
   const headerRef = useRef(null);
@@ -76,7 +88,6 @@ export default function Detail() {
     thumb: "",
   });
 
-
   // ⭐ 별점 상태(작성 폼)
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -88,7 +99,6 @@ export default function Detail() {
   const [uid, setUid] = useState(null);
   const [couponCount, setCouponCount] = useState(0);
   const [points, setPoints] = useState(0);
-
 
   // ✅ 삭제 확인 모달 상태
   const [confirmState, setConfirmState] = useState({
@@ -125,7 +135,6 @@ export default function Detail() {
     const list = Array.isArray(catalog)
       ? catalog
       : catalog?.items
-
       ? catalog.items
       : catalog && typeof catalog === "object"
       ? Object.values(catalog)
@@ -175,7 +184,6 @@ export default function Detail() {
     [targets]
   );
 
-
   // 구매바/푸터 보정
   const recalcBuybar = useCallback(() => {
     const buy = buybarRef.current;
@@ -209,9 +217,8 @@ export default function Detail() {
     const r1 = requestAnimationFrame(recalcBuybar);
     const r2 = requestAnimationFrame(recalcBuybar);
     return () => {
-
-    cancelAnimationFrame(r1);
-    cancelAnimationFrame(r2);
+      cancelAnimationFrame(r1);
+      cancelAnimationFrame(r2);
     };
   }, [optOpen, recalcBuybar]);
 
@@ -222,7 +229,6 @@ export default function Detail() {
     return () => ro.disconnect();
   }, [recalcBuybar]);
 
-
   // ESC로 닫기(사이드/리뷰/장바구니모달/수정모달/확인모달)
   useEffect(() => {
     const onKey = (e) => {
@@ -230,9 +236,8 @@ export default function Detail() {
         setNavOpen(false);
         setReviewModal((prev) => ({ ...prev, open: false }));
         setShowModal(false);
-
         setEditState((s) => ({ ...s, open: false }));
-        setConfirmState((s) => ({ ...s, open: false, onConfirm: null })); // ← 추가
+        setConfirmState((s) => ({ ...s, open: false, onConfirm: null }));
       }
     };
     document.addEventListener("keydown", onKey);
@@ -336,7 +341,7 @@ export default function Detail() {
   const total = useMemo(() => basePrice * qty, [basePrice, qty]);
 
   const decQty = useCallback(() => setQty((q) => Math.max(1, q - 1)), []);
-  const incQty = useCallback(() => setQty((q) => q + 1), []);
+  const incQty = useCallback(() => setQty((q) => q + 1), []); // ✅
   const onQtyInput = useCallback((e) => {
     const onlyNum = e.target.value.replace(/[^\d]/g, "");
     setQty(onlyNum === "" ? 1 : Math.max(1, Number(onlyNum)));
@@ -358,7 +363,6 @@ export default function Detail() {
     setShowModal(true);
   }, [active?.id, active?.slug, basePrice, gallery, key, product?.id, product?.name, product?.slug, qty]);
 
-
   // ✅ BUY NOW → Payment로 이동
   const handleBuyNow = useCallback(() => {
     const lineItem = {
@@ -368,14 +372,12 @@ export default function Detail() {
       unitPrice: basePrice,
       qty,
       delivery: 0,
-
       thumb: gallery?.[0] ?? product?.image ?? "",
       brand: product?.brand ?? "",
       optionLabel: "기본 구성",
     };
 
-
-  navigate("/payment", {
+    navigate("/payment", {
       state: {
         lineItems: [lineItem],
         coupon: 0,
@@ -392,7 +394,6 @@ export default function Detail() {
       navigate(-1);
     }
   }, [active, navigate]);
-
 
   // ================================
   //         리뷰 작성/표시/수정/삭제
@@ -414,6 +415,26 @@ export default function Detail() {
     () => String(product?.slug || product?.id || key || ""),
     [product?.slug, product?.id, key]
   );
+
+  // 🔒 내장(builtin) 리뷰 숨김 로컬스토리지
+  const HIDE_KEY = "builtinHiddenReviews";
+  const getHiddenBuiltin = useCallback((k) => {
+    try {
+      const raw = localStorage.getItem(`${HIDE_KEY}:${k}`);
+      const a = JSON.parse(raw || "[]");
+      return Array.isArray(a) ? a : [];
+    } catch {
+      return [];
+    }
+  }, []);
+  const hideBuiltin = useCallback((k, idx) => {
+    const a = getHiddenBuiltin(k);
+    if (!a.includes(idx)) {
+      const next = [...a, idx];
+      localStorage.setItem(`${HIDE_KEY}:${k}`, JSON.stringify(next));
+    }
+  }, [getHiddenBuiltin]);
+  const [hiddenTick, setHiddenTick] = useState(0); // 숨김 변경 트리거
 
   // 로딩
   useEffect(() => {
@@ -478,8 +499,10 @@ export default function Detail() {
     alert("리뷰가 등록되었습니다.");
   }, [isLoggedIn?.local, productKey, rating, rvPhoto, rvText, user?.name, authorId]);
 
-  // 표시용(내장 + 사용자) + 정렬/필터
+  // 표시용(내장 + 사용자) + 정렬/필터 (+관리자 숨김 반영)
   const displayReviews = useMemo(() => {
+    const hiddenBuiltinIdx = getHiddenBuiltin(productKey);
+
     const builtin = (active.reviews || []).map((rv, idx) => {
       const numeric =
         Number(rv.score) ||
@@ -505,6 +528,9 @@ export default function Detail() {
 
     let all = [...users, ...builtin];
 
+    // 관리자 숨김 처리된 내장 리뷰 제거
+    all = all.filter((x) => !(x._kind === "builtin" && hiddenBuiltinIdx.includes(x._idx)));
+
     if (rvOnlyPhoto) {
       all = all.filter((x) => !!x.thumb);
     }
@@ -518,7 +544,7 @@ export default function Detail() {
     }
 
     return all;
-  }, [active.reviews, img, rvOnlyPhoto, rvSort, userReviews]);
+  }, [active.reviews, img, rvOnlyPhoto, rvSort, userReviews, productKey, hiddenTick, getHiddenBuiltin]);
 
   // ====== 수정/삭제 ======
   const [editState, setEditState] = useState({
@@ -583,19 +609,38 @@ export default function Detail() {
 
   const removeReview = useCallback(
     (rv) => {
-      if (rv._kind !== "user" || rv.authorId !== authorId) {
+      const isBuiltin = rv._kind === "builtin";
+      const isUserReview = rv._kind === "user";
+      const isOwner = rv.authorId === authorId;
+
+      // 내장 리뷰: 관리자만 숨김 처리
+      if (isBuiltin) {
+        if (!isAdmin) {
+          alert("내장 리뷰는 삭제할 수 없습니다.");
+          return;
+        }
+        askConfirm("해당 내장 리뷰를 화면에서 숨길까요? (관리자)", () => {
+          hideBuiltin(productKey, rv._idx);
+          setHiddenTick((t) => t + 1);
+          setConfirmState((s) => ({ ...s, open: false, onConfirm: null }));
+        });
+        return;
+      }
+
+      // 사용자 리뷰: 본인 또는 관리자만 삭제
+      if (isUserReview && !(isOwner || isAdmin)) {
         alert("내가 작성한 리뷰만 삭제할 수 있어요.");
         return;
       }
 
-      // window.confirm 대신 커스텀 확인 모달
-      askConfirm("정말 삭제할까요?", () => {
-        const next = deleteReviewFor(productKey, rv.id, authorId);
+      const delAuthorId = isAdmin ? rv.authorId : authorId;
+      askConfirm(isAdmin ? "이 리뷰를 삭제할까요? (관리자)" : "정말 삭제할까요?", () => {
+        const next = deleteReviewFor(productKey, rv.id, delAuthorId);
         setUserReviews(next);
         setConfirmState((s) => ({ ...s, open: false, onConfirm: null }));
       });
     },
-    [productKey, authorId, askConfirm]
+    [productKey, authorId, isAdmin, askConfirm, hideBuiltin]
   );
 
   if (!active) return null;
@@ -796,7 +841,6 @@ export default function Detail() {
             <div className="detail-inpo detail-review" id="review" ref={reviewRef}>
               <h3 className="detail-info-title">리뷰</h3>
 
-
               {/* 리뷰 작성 폼 */}
               <form
                 className="rv-form"
@@ -844,7 +888,6 @@ export default function Detail() {
                   </div>
 
                   <label className="rv-photo-btn">
-
                     <input type="file" accept="image/*" hidden onChange={onPickPhoto} />
                     <span>사진첨부하기</span>
                   </label>
@@ -915,6 +958,7 @@ export default function Detail() {
               <ul className="rv-list">
                 {displayReviews.map((rv, idx) => {
                   const isOwner = rv._kind === "user" && rv.authorId === authorId;
+                  const canDelete = isOwner || isAdmin; // ✅ 관리자도 삭제 가능
                   return (
                     <li className="rv-item" key={rv.id || `${rv._kind}-${rv._idx || idx}`}>
                       <div className="rv-head">
@@ -926,14 +970,16 @@ export default function Detail() {
                             <span className="rv-score">{rv.score}</span>
                           </p>
                         </div>
-                        {/* 본인 리뷰만 수정/삭제 */}
-                        {isOwner && (
+                        {(canDelete || isOwner) && (
                           <div className="rv-actions" style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-                            <button type="button" className="rv-edit-btn" onClick={() => startEdit(rv)}>
-                              수정
-                            </button>
+                            {/* 수정은 본인만 */}
+                            {isOwner && (
+                              <button type="button" className="rv-edit-btn" onClick={() => startEdit(rv)}>
+                                수정
+                              </button>
+                            )}
                             <button type="button" className="rv-del-btn" onClick={() => removeReview(rv)}>
-                              삭제
+                              {rv._kind === "builtin" ? "숨김" : "삭제"}
                             </button>
                           </div>
                         )}
@@ -1052,15 +1098,17 @@ export default function Detail() {
         </div>
       </main>
 
-
-      {/* 리뷰 읽기 모달 */}
+      {/* 리뷰 읽기 모달 (디자인/구조 유지: 항상 렌더 + display 토글) */}
       <aside
         id="rv-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="rvm-title"
         ref={rvModalRef}
-        style={{ display: reviewModal.open ? "block" : "none" }}
+        style={{
+          display: reviewModal.open ? "block" : "none",
+          zIndex: 2000, // 헤더/기타 오버레이 위
+        }}
       >
         <button
           type="button"
@@ -1087,14 +1135,16 @@ export default function Detail() {
         </div>
       </aside>
 
-
-      {/* 리뷰 수정 모달 (본인 리뷰만) */}
+      {/* 리뷰 수정 모달 (본인 리뷰만) - 조건부 렌더링 */}
+      {editState.open && (
         <aside
           id="rv-edit-modal"
           role="dialog"
           aria-modal="true"
           aria-labelledby="rve-title"
-          style={{ display: editState.open ? "block" : "none" }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditState((s) => ({ ...s, open: false }));
+          }}
         >
           {/* 1행: 닉네임 | 닫기 */}
           <div className="rve-nick" id="rve-title">
@@ -1104,7 +1154,7 @@ export default function Detail() {
             type="button"
             className="rvm-close"
             aria-label="닫기"
-            onClick={() => setReviewModal((p) => ({ ...p, open: false }))}
+            onClick={() => setEditState((s) => ({ ...s, open: false }))}
           >
             ×
           </button>
@@ -1154,7 +1204,7 @@ export default function Detail() {
             <span>사진 바꾸기</span>
           </label>
 
-          {/* 5행: 저장(좌) | 닫기(우) */}
+          {/* 5행: 저장 */}
           <button
             className="rv-edit-save"
             type="button"
@@ -1163,7 +1213,7 @@ export default function Detail() {
             저장
           </button>
         </aside>
-
+      )}
 
       {/* 확인 모달 */}
       {confirmState.open && (
@@ -1179,7 +1229,7 @@ export default function Detail() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 50,
+            zIndex: 2000
           }}
         >
           <div

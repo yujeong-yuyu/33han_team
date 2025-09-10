@@ -588,6 +588,7 @@
     width: 250px;
     height: 250px;
     grid-area: photo;
+    background-color: #FFF
 }
 
 .detail-warp1 #rv-edit-modal .rv-preview img {
@@ -596,20 +597,12 @@
     display: block;
 }
 
-.detail-warp1 #rv-edit-modal .rv-photo-btn {
-    grid-area: btn;
-    margin-right: auto;
-}
-
 .detail-warp1 #rv-edit-modal textarea.rv-text {
     grid-area: text;
     width: 100%;
     min-height: 275px;
 }
 
-.detail-warp1 #rv-edit-modal .rv-edit-save {
-    grid-area: save;
-}
 
 .detail-warp1 #rv-edit-modal .rv-edit-bottomclose {
     grid-area: bottomclose;
@@ -631,10 +624,13 @@
 }
 
 .detail-warp1 #rv-edit-modal .rv-photo-btn {
-    display: inline-flex;
+    width: 250px;
+    grid-area: btn;
+    justify-content: center;
     align-items: center;
+    display: inline-flex;
     gap: 8px;
-    padding: 8px 12px;
+    padding: 9px 12px;
     border: 1px solid #5E472F;
     border-radius: 6px;
     font-size: 14px;
@@ -642,14 +638,16 @@
 }
 
 .detail-warp1 #rv-edit-modal .rv-edit-save {
+    width: 260px;
+    grid-area: save;
     grid-area: bottomclose;
     justify-self: end;
-    padding: 10px 16px;
-    border-radius: 10px;
-    border: 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
     background: #5E472F;
     color: #fff;
-    font-weight: 700;
+    cursor: pointer;
 }
 
 
@@ -750,7 +748,7 @@
 
 
 /* ✅ translateY → rotate 로 수정 */
-.detail-warp1 .detail-buybar-actions[aria-expanded="true"] .caret {
+.detail-warp1 .detail-buybar-actions[aria-expanded="true"] .caretSpan {
     transform: rotate(180deg);
 }
 
