@@ -35,6 +35,7 @@ import Best from "./routes/Best";
    ========================= */
 function SplashOverlay({
   text = "Souvenir",
+  stext = "행복을 선물하는 소품샵",
   videoSrc = "/videos/intro.mp4",
   poster = "",
   duration = 2500, // ms
@@ -70,6 +71,7 @@ function SplashOverlay({
     width: "100%",
     height: "100%",
     objectFit: "cover",
+    opacity: 0.75
   };
 
   const textWrap = {
@@ -82,10 +84,22 @@ function SplashOverlay({
   };
 
   const textStyle = {
-    fontSize: "2rem", // 요청: 2rem
+    fontSize: "4rem", // 요청: 2rem
     color: "#fff",
     lineHeight: 1.2,
     letterSpacing: "0.02em",
+    fontFamily: "Playfair Display",
+    textShadow: "2px 3px 2px #888"
+  };
+
+  const stextStyle = {
+    fontSize: "1.1rem", // 요청: 2rem
+    color: "#fff",
+    lineHeight: 1.5,
+    letterSpacing: "2px",
+    fontFamily: "NanumSquareRound",
+    textShadow: "1px 2px 1px #888",
+    fontWeight: "400"
   };
 
   return (
@@ -102,6 +116,7 @@ function SplashOverlay({
       </video>
       <div style={textWrap}>
         <p style={textStyle}>{text}</p>
+        <p style={stextStyle}>{stext}</p>
       </div>
     </div>
   );
@@ -175,6 +190,7 @@ export default function App() {
           poster="/images/intro-poster.jpg" // 선택 사항
           duration={2500}
           onDone={() => setShowSplash(false)}
+          
         />
       )}
 

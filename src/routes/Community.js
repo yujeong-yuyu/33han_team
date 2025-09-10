@@ -121,7 +121,7 @@ function ComCard({ post, onLike, isAdmin, isMine, onAdminDelete }) {
 /* ------------------- 페이지 ------------------- */
 export default function Community() {
   const navigate = useNavigate();
-  const { isLoggedIn, isAdmin, user } = useAuth(); // ✅ 로그인/권한/사용자
+  const { isLoggedIn, logoutAll, user, isAdmin: isAdminFn } = useAuth(); // ✅ 로그인/권한/사용자
 
   const writeNavigate = () => {
     if (!isLoggedIn?.local) {
@@ -131,6 +131,19 @@ export default function Community() {
     }
     navigate("/Community2");
   };
+
+  /* 관리자 */
+  const isAdmin = useMemo(() => {
+   try {
+     if (typeof isAdminFn === "function") return !!isAdminFn();
+   } catch {}
+   return !!(
+     user?.role === "admin" ||
+     user?.isAdmin === true ||
+     isLoggedIn?.role === "admin" ||
+     isLoggedIn?.admin === true
+   );
+  }, [isAdminFn, user, isLoggedIn]);
 
   /* ===== 커뮤니티 글: 로컬 + JSON 통합 ===== */
   const [likesMap, setLikesMap] = useState(() => loadLikesMap());
@@ -262,99 +275,149 @@ export default function Community() {
   const [newsError, setNewsError] = useState("");
 
   useEffect(() => {
-    const NEWS_KEY = process.env.REACT_APP_NEWS_KEY;
-    if (!NEWS_KEY) {
-      setNewsLoading(false);
-      setNewsError("NEWS API 키가 없습니다. .env에 REACT_APP_NEWS_KEY를 설정하세요.");
-      return;
-    }
+  // 1) CRA/Vite 둘 다 대응
+  const NEWS_KEY =
+    import.meta?.env?.VITE_NEWS_KEY ||
+    process.env.REACT_APP_NEWS_KEY;
 
-    const KEYWORDS = [
-      "오브제",
-      "인테리어 소품",
-      "테이블 데코",
-      "선반 꾸미기",
-      "도자기 화병",
-      "캔들 홀더",
-      "트레이 데코",
-      "우드 오브제",
-      "유리 오브제",
-      "미니어처 소품",
-      "빈티지 소품",
-      "패브릭 소품",
-      "\"ceramic vase\"",
-      "\"bud vase\"",
-      "\"candle holder\"",
-      "\"sculptural candle\"",
-      "\"trinket dish\"",
-      "\"decor tray\"",
-      "\"shelf styling\"",
-      "\"mantel decor\"",
-      "\"miniature decor\"",
-      "\"glass decor\"",
-      "\"wooden decor\"",
-      "\"table vignette\""
-    ];
-    const qString = KEYWORDS.join(" OR ");
+  if (!NEWS_KEY) {
+    setNewsLoading(false);
+    setNewsError("NEWS API 키가 없습니다. .env에 REACT_APP_NEWS_KEY 또는 VITE_NEWS_KEY를 설정하세요.");
+    return;
+  }
 
-    const from = new Date();
-    from.setDate(from.getDate() - 14);
-    const fromISO = from.toISOString();
+  // 2) 키워드 (너무 많으면 500자 넘으니 청크로 분할)
+  const KEYWORDS = [
+    "가구","원목 가구","라탄 가구","모듈 가구","빈티지 가구","북유럽 가구",
+    "인테리어","홈스타일링","집꾸미기","셀프 인테리어","원룸 인테리어",
+    "거실 인테리어","침실 인테리어","주방 인테리어","현관 인테리어",
+    "소품","인테리어 소품","테이블 데코","선반 꾸미기","오브제",
+    "화병","캔들 홀더","트레이","러그","쿠션","담요","액자","포스터",
+    "플랜테리어","실내 식물","화분","인센스 홀더",
+    "예쁜 집","감성 인테리어","따뜻한 집","하우스 투어","홈투어",
+    "홈카페","무드등 인테리어","색감 인테리어","내추럴 인테리어","미니멀 인테리어",
+    "\"interior design\"","\"home decor\"","\"living room decor\"","\"bedroom decor\"",
+    "\"kitchen decor\"","\"shelf styling\"","\"coffee table decor\"",
+    "\"ceramic vase\"","\"candle holder\"","\"decor tray\"","\"trinket dish\"",
+    "\"planter\"","\"indoor plants\"","\"cozy home\"","\"minimalist decor\"","\"vintage decor\""
+  ];
 
-    const base = new URL("https://newsapi.org/v2/everything");
-    base.searchParams.set("q", qString);
-    base.searchParams.set("searchIn", "title,description");
-    base.searchParams.set("sortBy", "publishedAt");
-    base.searchParams.set("pageSize", "5");
-    base.searchParams.set("from", fromISO);
-    base.searchParams.set("language", "ko", "en"); // 1차: ko
+  // q 길이가 500자를 넘지 않도록 키워드 묶음으로 나누기
+  const buildQueryBatches = (keywords, maxLen = 480) => {
+    const batches = [];
+    let cur = [];
 
-    const toSlides = (articles = []) =>
-      articles.map((a) => ({
-        img: a.urlToImage || "https://via.placeholder.com/620x311?text=No+Image",
-        source: a.source?.name || "뉴스",
-        time: new Date(a.publishedAt || Date.now()).toLocaleString("ko-KR", {
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        title: a.title || "",
-        likes: Math.floor(Math.random() * 10),
-        comments: Math.floor(Math.random() * 5),
-      }));
-
-    const fetchNews = async () => {
-      setNewsLoading(true);
-      setNewsError("");
-      try {
-        let url = base.toString();
-        let res = await fetch(url, { headers: { "X-Api-Key": NEWS_KEY } });
-        let data = await res.json();
-        if (data.status !== "ok") throw new Error(data.message || "NewsAPI error");
-        let articles = data.articles || [];
-
-        if (!articles.length) {
-          const url2 = new URL(base);
-          url2.searchParams.delete("language"); // 2차: 언어 완화
-          res = await fetch(url2.toString(), { headers: { "X-Api-Key": NEWS_KEY } });
-          data = await res.json();
-          if (data.status !== "ok") throw new Error(data.message || "NewsAPI error");
-          articles = data.articles || [];
-        }
-
-        setSlides(toSlides(articles));
-      } catch (e) {
-        console.error("[NewsAPI] failed:", e);
-        setNewsError("인테리어 관련 뉴스를 불러오지 못했습니다.");
-        setSlides([]);
-      } finally {
-        setNewsLoading(false);
+    const pushOrNew = (kw) => {
+      const candidate = [...cur, kw].join(" OR ");
+      if (candidate.length > maxLen) {
+        if (cur.length) batches.push(cur.join(" OR "));
+        cur = [kw];
+      } else {
+        cur.push(kw);
       }
     };
 
-    fetchNews();
-  }, []);
+    keywords.forEach(pushOrNew);
+    if (cur.length) batches.push(cur.join(" OR "));
+    return batches;
+  };
+
+  const queryBatches = buildQueryBatches([...new Set(KEYWORDS)]);
+
+  const from = new Date();
+  from.setDate(from.getDate() - 14);
+  const fromISO = from.toISOString();
+
+  const toSlides = (articles = []) =>
+    articles.map((a) => ({
+      img: a.urlToImage || "https://via.placeholder.com/620x311?text=No+Image",
+      source: a.source?.name || "뉴스",
+      time: new Date(a.publishedAt || Date.now()).toLocaleString("ko-KR", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      title: a.title || "",
+      url: a.url,
+      likes: Math.floor(Math.random() * 10),
+      comments: Math.floor(Math.random() * 5),
+    }));
+
+  const buildUrl = (q, lang /* 'ko' | 'en' | undefined */) => {
+    const u = new URL("https://newsapi.org/v2/everything");
+    u.searchParams.set("q", q);
+    u.searchParams.set("searchIn", "title,description");
+    u.searchParams.set("sortBy", "publishedAt");
+    u.searchParams.set("pageSize", "10"); // 청크당 넉넉히 받아서 나중에 상위만 사용
+    u.searchParams.set("from", fromISO);
+    if (lang) u.searchParams.set("language", lang); // 한 번에 하나만!
+    return u.toString();
+  };
+
+  const fetchAll = async (lang) => {
+    const all = [];
+    for (const q of queryBatches) {
+      const res = await fetch(buildUrl(q, lang), {
+        headers: { "X-Api-Key": NEWS_KEY }
+      });
+      const data = await res.json();
+      if (data.status !== "ok") {
+        // 500자 초과, rate limit, etc 메시지 확인용 로그
+        console.warn("[NewsAPI]", lang, data);
+        continue;
+      }
+      all.push(...(data.articles || []));
+    }
+    return all;
+  };
+
+  const dedupeByUrl = (arr) => {
+    const seen = new Set();
+    return arr.filter((a) => {
+      const key = a.url || a.title;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
+  const fetchNews = async () => {
+    setNewsLoading(true);
+    setNewsError("");
+    try {
+      // 1차: 한국어
+      let articles = await fetchAll("ko");
+
+      // 부족하면 2차: 영어도 합치기
+      if (articles.length < 5) {
+        const en = await fetchAll("en");
+        articles = [...articles, ...en];
+      }
+
+      // 정렬 + 중복 제거 + 상위 N개
+      const cleaned = dedupeByUrl(articles)
+        .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
+        .slice(0, 10);
+
+      if (!cleaned.length) {
+        setSlides([]);
+        setNewsError("최근 2주 내 관련 기사가 없습니다.");
+        return;
+      }
+
+      setSlides(toSlides(cleaned.slice(0, 5)));
+    } catch (e) {
+      console.error("[NewsAPI] failed:", e);
+      setNewsError("인테리어 관련 뉴스를 불러오지 못했습니다.");
+      setSlides([]);
+    } finally {
+      setNewsLoading(false);
+    }
+  };
+
+  fetchNews();
+}, []);
 
   const totalSlides = slides.length;
   const nextSlide = useCallback(() => {
